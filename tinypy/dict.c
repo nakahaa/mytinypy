@@ -1,6 +1,3 @@
-/* File: Dict
- * Functions for dealing with dictionaries.
- */
 int tp_lua_hash(void const *v,int l) {
     int i,step = (l>>5)+1;
     int h = l + (l >= 4?*(int*)v:0);
@@ -13,13 +10,6 @@ void _tp_dict_free(TP, _tp_dict *self) {
     tp_free(tp, self->items);
     tp_free(tp, self);
 }
-
-/* void _tp_dict_reset(_tp_dict *self) {
-       memset(self->items,0,self->alloc*sizeof(tp_item));
-       self->len = 0;
-       self->used = 0;
-       self->cur = 0;
-   }*/
 
 int tp_hash(TP,tp_obj v) {
     switch (v.type) {
@@ -162,16 +152,6 @@ tp_obj tp_merge(TP) {
     return tp_None;
 }
 
-/* Function: tp_dict
- *
- * Creates a new dictionary object.
- *
- * *Note* If you use <tp_setmeta> on the dictionary, you have to use <tp_getraw> to
- * access the "raw" dictionary again.
- *
- * Returns:
- * The newly created dictionary.
- */
 tp_obj tp_dict(TP) {
     tp_obj r = {TP_DICT};
     r.dict.val = _tp_dict_new(tp);
