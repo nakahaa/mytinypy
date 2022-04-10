@@ -1,7 +1,52 @@
 import tokenize, sys
 from tokenize import Token
-if not "tinypy" in sys.version:
-    from boot import *
+
+def _boot_init():
+    global FTYPE 
+    f = open('tp.h','r').read()
+    FTYPE = 'f'
+    if 'double tp_num' in f: FTYPE = 'd'
+    import sys
+    global ARGV
+    ARGV = sys.argv
+_boot_init()
+
+def merge(a,b):
+    if isinstance(a,dict):
+        for k in b: a[k] = b[k]
+    else:
+        for k in b: setattr(a,k,b[k])
+
+def number(v):
+    if type(v) is str and v[0:2] == '0x':
+        v = int(v[2:],16)
+    return float(v)
+
+def istype(v,t):
+    if t == 'string': return isinstance(v,str)
+    elif t == 'list': return (isinstance(v,list) or isinstance(v,tuple))
+    elif t == 'dict': return isinstance(v,dict)
+    elif t == 'number': return (isinstance(v,float) or isinstance(v,int))
+    raise '?'
+
+def fpack(v):
+    import struct
+    return struct.pack(FTYPE,v)
+
+def system(cmd):
+    import os
+    return os.system(cmd)
+
+def load(fname):
+    f = open(fname,'rb')
+    r = f.read()
+    f.close()
+    return r
+
+def save(fname,v):
+    f = open(fname,'wb')
+    f.write(v)
+    f.close()
 
 EOF,ADD,SUB,MUL,DIV,POW,BITAND,BITOR,CMP,GET,SET,NUMBER,STRING,GGET,GSET,MOVE,DEF,PASS,JUMP,CALL,RETURN,IF,DEBUG,EQ,LE,LT,DICT,LIST,NONE,LEN,POS,PARAMS,IGET,FILE,NAME,NE,HAS,RAISE,SETJMP,MOD,LSH,RSH,ITER,DEL,REGS,BITXOR,IFN,NOT,BITNOT = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48
 

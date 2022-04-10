@@ -1,9 +1,3 @@
-/* tp_obj tp_track(TP,tp_obj v) { return v; }
-   void tp_grey(TP,tp_obj v) { }
-   void tp_full(TP) { }
-   void tp_gc_init(TP) { }
-   void tp_gc_deinit(TP) { }
-   void tp_delete(TP,tp_obj v) { }*/
 
 void tp_grey(TP,tp_obj v) {
     if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data) { return; }

@@ -170,6 +170,7 @@ tp_obj tp_exists(TP) {
     struct stat stbuf;
     return tp_number(!stat(fname,&stbuf));
 }
+
 tp_obj tp_mtime(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
