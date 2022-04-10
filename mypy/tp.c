@@ -5,7 +5,7 @@
 #include "tp.h"
 #include "list.c"
 #include "dict.c"
-#include "misc.c"
+// #include "misc.c"
 #include "string.c"
 #include "builtins.c"
 #include "gc.c"

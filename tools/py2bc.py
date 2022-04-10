@@ -88,9 +88,6 @@ def import_fname(fname,name):
     exec(code,g)
     return g
 
-def tinypy():
-    return import_fname(ARGV[0],'__main__')
-
 def main(src,dest):
     s = load(src)
     r = _compile(s,src)
