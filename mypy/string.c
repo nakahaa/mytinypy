@@ -1,12 +1,3 @@
-/* File: String
- * String handling functions.
- */
- 
-/*
- * Create a new empty string of a certain size.
- * Does not put it in for GC tracking, since contents should be
- * filled after returning.
- */ 
 tp_obj tp_string_t(TP, int n) {
     tp_obj r = tp_string_n(0,n);
     r.string.info = (_tp_string*)tp_malloc(tp, sizeof(_tp_string)+n);
@@ -15,21 +6,12 @@ tp_obj tp_string_t(TP, int n) {
     return r;
 }
 
-/*
- * Create a new string which is a copy of some memory.
- * This is put into GC tracking for you.
- */
 tp_obj tp_string_copy(TP, const char *s, int n) {
     tp_obj r = tp_string_t(tp,n);
     memcpy(r.string.info->s,s,n);
     return tp_track(tp,r);
 }
 
-/*
- * Create a new string which is a substring slice of another STRING.
- * Does not need to be put into GC tracking, as its parent is
- * already being tracked (supposedly).
- */
 tp_obj tp_string_sub(TP, tp_obj s, int a, int b) {
     int l = s.string.len;
     a = _tp_max(0,(a<0?l+a:a)); b = _tp_min(l,(b<0?l+b:b));
@@ -170,7 +152,6 @@ tp_obj tp_replace(TP) {
         n += 1;
         p.string.val += i + k.string.len; p.string.len -= i + k.string.len;
     }
-/*     fprintf(stderr,"ns: %d\n",n); */
     l = s.string.len + n * (v.string.len-k.string.len);
     rr = tp_string_t(tp,l);
     r = rr.string.info->s;
