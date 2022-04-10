@@ -1,6 +1,3 @@
-/* File: General
- * Things defined in tp.h.
- */
 #ifndef TP_H
 #define TP_H
 
@@ -32,15 +29,6 @@
 #ifndef tp_inline
 #error "Unsuported compiler"
 #endif
-
-/*  #define tp_malloc(x) calloc((x),1)
-    #define tp_realloc(x,y) realloc(x,y)
-    #define tp_free(x) free(x) */
-
-/* #include <gc/gc.h>
-   #define tp_malloc(x) GC_MALLOC(x)
-   #define tp_realloc(x,y) GC_REALLOC(x,y)
-   #define tp_free(x)*/
 
 enum {
     TP_NONE,TP_NUMBER,TP_STRING,TP_DICT,
@@ -81,28 +69,6 @@ typedef struct tp_data_ {
     int magic;
 } tp_data_;
 
-/* Type: tp_obj
- * Tinypy's object representation.
- * 
- * Every object in tinypy is of this type in the C API.
- *
- * Fields:
- * type - This determines what kind of objects it is. It is either TP_NONE, in
- *        which case this is the none type and no other fields can be accessed.
- *        Or it has one of the values listed below, and the corresponding
- *        fields can be accessed.
- * number - TP_NUMBER
- * number.val - A double value with the numeric value.
- * string - TP_STRING
- * string.val - A pointer to the string data.
- * string.len - Length in bytes of the string data.
- * dict - TP_DICT
- * list - TP_LIST
- * fnc - TP_FNC
- * data - TP_DATA
- * data.val - The user-provided data pointer.
- * data.magic - The user-provided magic number for identifying the data type.
- */
 typedef union tp_obj {
     int type;
     tp_number_ number;
@@ -157,7 +123,6 @@ typedef union tp_code {
 } tp_code;
 
 typedef struct tp_frame_ {
-/*    tp_code *codes; */
     tp_obj code;
     tp_code *cur;
     tp_code *jmp;
@@ -177,25 +142,6 @@ typedef struct tp_frame_ {
 /* #define TP_REGS_PER_FRAME 256*/
 #define TP_REGS 16384
 
-/* Type: tp_vm
- * Representation of a tinypy virtual machine instance.
- * 
- * A new tp_vm struct is created with <tp_init>, and will be passed to most
- * tinypy functions as first parameter. It contains all the data associated
- * with an instance of a tinypy virtual machine - so it is easy to have
- * multiple instances running at the same time. When you want to free up all
- * memory used by an instance, call <tp_deinit>.
- * 
- * Fields:
- * These fields are currently documented: 
- * 
- * builtins - A dictionary containing all builtin objects.
- * modules - A dictionary with all loaded modules.
- * params - A list of parameters for the current function call.
- * frames - A list of all call frames.
- * cur - The index of the currently executing call frame.
- * frames[n].globals - A dictionary of global sybmols in callframe n.
- */
 typedef struct tp_vm {
     tp_obj builtins;
     tp_obj modules;
@@ -213,12 +159,10 @@ typedef struct tp_vm {
     tp_obj ex;
     char chars[256][2];
     int cur;
-    /* gc */
     _tp_list *white;
     _tp_list *grey;
     _tp_list *black;
     int steps;
-    /* sandbox */
     clock_t clocks;
     double time_elapsed;
     double time_limit;
@@ -268,37 +212,13 @@ void tp_grey(TP,tp_obj);
 tp_obj tp_call(TP, tp_obj fnc, tp_obj params);
 tp_obj tp_add(TP,tp_obj a, tp_obj b) ;
 
-/* __func__ __VA_ARGS__ __FILE__ __LINE__ */
 
-/* Function: tp_raise
- * Macro to raise an exception.
- * 
- * This macro will return from the current function returning "r". The
- * remaining parameters are used to format the exception message.
- */
-/*
-#define tp_raise(r,fmt,...) { \
-    _tp_raise(tp,tp_printf(tp,fmt,__VA_ARGS__)); \
-    return r; \
-}
-*/
 #define tp_raise(r,v) { \
     _tp_raise(tp,v); \
     return r; \
 }
 
-/* Function: tp_string
- * Creates a new string object from a C string.
- * 
- * Given a pointer to a C string, creates a tinypy object representing the
- * same string.
- * 
- * *Note* Only a reference to the string will be kept by tinypy, so make sure
- * it does not go out of scope, and don't de-allocate it. Also be aware that
- * tinypy will not delete the string for you. In many cases, it is best to
- * use <tp_string_t> or <tp_string_slice> to create a string where tinypy
- * manages storage for you.
- */
+
 tp_inline static tp_obj tp_string(char const *v) {
     tp_obj val;
     tp_string_ s = {TP_STRING, 0, v, 0};
@@ -332,27 +252,9 @@ tp_inline static tp_obj tp_type(TP,int t,tp_obj v) {
 #define TP_NO_LIMIT 0
 #define TP_TYPE(t) tp_type(tp,t,TP_OBJ())
 #define TP_NUM() (TP_TYPE(TP_NUMBER).number.val)
-/* #define TP_STR() (TP_CSTR(TP_TYPE(TP_STRING))) */
 #define TP_STR() (TP_TYPE(TP_STRING))
 #define TP_DEFAULT(d) (tp->params.list.val->len?tp_get(tp,tp->params,tp_None):(d))
 
-/* Macro: TP_LOOP
- * Macro to iterate over all remaining arguments.
- *
- * If you have a function which takes a variable number of arguments, you can
- * iterate through all remaining arguments for example like this:
- *
- * > tp_obj *my_func(tp_vm *tp)
- * > {
- * >     // We retrieve the first argument like normal.
- * >     tp_obj first = TP_OBJ();
- * >     // Then we iterate over the remaining arguments.
- * >     tp_obj arg;
- * >     TP_LOOP(arg)
- * >         // do something with arg
- * >     TP_END
- * > }
- */
 #define TP_LOOP(e) \
     int __l = tp->params.list.val->len; \
     int __i; for (__i=0; __i<__l; __i++) { \
@@ -364,9 +266,6 @@ tp_inline static int _tp_min(int a, int b) { return (a<b?a:b); }
 tp_inline static int _tp_max(int a, int b) { return (a>b?a:b); }
 tp_inline static int _tp_sign(tp_num v) { return (v<0?-1:(v>0?1:0)); }
 
-/* Function: tp_number
- * Creates a new numeric object.
- */
 tp_inline static tp_obj tp_number(tp_num v) {
     tp_obj val = {TP_NUMBER};
     val.number.val = v;
@@ -378,13 +277,6 @@ tp_inline static void tp_echo(TP,tp_obj e) {
     fwrite(e.string.val,1,e.string.len,stdout);
 }
 
-/* Function: tp_string_n
- * Creates a new string object from a partial C string.
- * 
- * Like <tp_string>, but you specify how many bytes of the given C string to
- * use for the string object. The *note* also applies for this function, as the
- * string reference and length are kept, but no actual substring is stored.
- */
 tp_inline static tp_obj tp_string_n(char const *v,int n) {
     tp_obj val;
     tp_string_ s = {TP_STRING, 0,v,n};

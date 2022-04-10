@@ -1,12 +1,3 @@
-/* File: Operations
- * Various tinypy operations.
- */
-
-/* Function: tp_str
- * String representation of an object.
- *
- * Returns a string object representating self.
- */
 tp_obj tp_str(TP,tp_obj self) {
     int type = self.type;
     if (type == TP_STRING) { return self; }
@@ -28,13 +19,7 @@ tp_obj tp_str(TP,tp_obj self) {
     return tp_string("<?>");
 }
 
-/* Function: tp_bool
- * Check the truth value of an object
- *
- * Returns false if v is a numeric object with a value of exactly 0, v is of
- * type None or v is a string list or dictionary with a length of 0. Else true
- * is returned.
- */
+
 int tp_bool(TP,tp_obj v) {
     switch(v.type) {
         case TP_NUMBER: return v.number.val != 0;
@@ -47,11 +32,6 @@ int tp_bool(TP,tp_obj v) {
 }
 
 
-/* Function: tp_has
- * Checks if an object contains a key.
- *
- * Returns tp_True if self[k] exists, tp_False otherwise.
- */
 tp_obj tp_has(TP,tp_obj self, tp_obj k) {
     int type = self.type;
     if (type == TP_DICT) {
@@ -65,13 +45,7 @@ tp_obj tp_has(TP,tp_obj self, tp_obj k) {
     tp_raise(tp_None,tp_string("(tp_has) TypeError: iterable argument required"));
 }
 
-/* Function: tp_del
- * Remove a dictionary entry.
- *
- * Removes the key k from self. Also works on classes and objects.
- *
- * Note that unlike with Python, you cannot use this to remove list items.
- */
+
 void tp_del(TP,tp_obj self, tp_obj k) {
     int type = self.type;
     if (type == TP_DICT) {
@@ -82,28 +56,6 @@ void tp_del(TP,tp_obj self, tp_obj k) {
 }
 
 
-/* Function: tp_iter
- * Iterate through a list or dict.
- *
- * If self is a list/string/dictionary, this will iterate over the
- * elements/characters/keys respectively, if k is an increasing index
- * starting with 0 up to the length of the object-1.
- *
- * In the case of a list of string, the returned items will correspond to the
- * item at index k. For a dictionary, no guarantees are made about the order.
- * You also cannot call the function with a specific k to get a specific
- * item -- it is only meant for iterating through all items, calling this
- * function len(self) times. Use <tp_get> to retrieve a specific item, and
- * <tp_len> to get the length.
- *
- * Parameters:
- * self - The object over which to iterate.
- * k - You must pass 0 on the first call, then increase it by 1 after each call,
- *     and don't call the function with k >= len(self).
- *
- * Returns:
- * The first (k = 0) or next (k = 1 .. len(self)-1) item in the iteration.
- */
 tp_obj tp_iter(TP,tp_obj self, tp_obj k) {
     int type = self.type;
     if (type == TP_LIST || type == TP_STRING) { return tp_get(tp,self,k); }
@@ -114,15 +66,6 @@ tp_obj tp_iter(TP,tp_obj self, tp_obj k) {
 }
 
 
-/* Function: tp_get
- * Attribute lookup.
- * 
- * This returns the result of using self[k] in actual code. It works for
- * dictionaries (including classes and instantiated objects), lists and strings.
- *
- * As a special case, if self is a list, self[None] will return the first
- * element in the list and subsequently remove it from the list.
- */
 tp_obj tp_get(TP,tp_obj self, tp_obj k) {
     int type = self.type;
     tp_obj r;
@@ -202,13 +145,6 @@ tp_obj tp_get(TP,tp_obj self, tp_obj k) {
     tp_raise(tp_None,tp_string("(tp_get) TypeError: ?"));
 }
 
-/* Function: tp_iget
- * Failsafe attribute lookup.
- *
- * This is like <tp_get>, except it will return false if the attribute lookup
- * failed. Otherwise, it will return true, and the object will be returned
- * over the reference parameter r.
- */
 int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) {
     if (self.type == TP_DICT) {
         int n = _tp_dict_find(tp,self.dict.val,k);
@@ -222,12 +158,7 @@ int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) {
     return 1;
 }
 
-/* Function: tp_set
- * Attribute modification.
- * 
- * This is the counterpart of tp_get, it does the same as self[k] = v would do
- * in actual tinypy code.
- */
+
 void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) {
     int type = self.type;
 
@@ -296,11 +227,6 @@ tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
     tp_raise(tp_None,tp_string("(tp_mul) TypeError: ?"));
 }
 
-/* Function: tp_len
- * Returns the length of an object.
- *
- * Returns the number of items in a list or dict, or the length of a string.
- */
 tp_obj tp_len(TP,tp_obj self) {
     int type = self.type;
     if (type == TP_STRING) {
@@ -367,4 +293,3 @@ tp_obj tp_bitwise_not(TP, tp_obj a) {
     tp_raise(tp_None,tp_string("(tp_bitwise_not) TypeError: unsupported operand type"));
 }
 
-/**/

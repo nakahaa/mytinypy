@@ -1,6 +1,5 @@
 #include "tp.c"
 
-
 int main(int argc, char *argv[]) {
     tp_vm *tp = tp_init(argc,argv);
     
@@ -8,5 +7,3 @@ int main(int argc, char *argv[]) {
     tp_deinit(tp);
     return(0);
 }
-
-/**/
