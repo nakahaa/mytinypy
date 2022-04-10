@@ -1,129 +1,30 @@
 import os
 import sys
 
-VARS = {'$CPYTHON':''}
+
 TOPDIR = os.path.abspath(os.path.dirname(__file__))
-TEST = False
-CLEAN = False
-BOOT = False
-DEBUG = False
-VALGRIND = False
-SANDBOX = False
-CORE = ['tokenize','parse','encode','py2bc']
-MODULES = []
+
+HELP = """
+python build.py mypy
+"""
 
 def main():
     chksize()
     if len(sys.argv) < 2:
-        print HELP
+        print(HELP)
         return
-    
-    global TEST,CLEAN,BOOT,DEBUG,VALGRIND,SANDBOX
-    TEST = 'test' in sys.argv
-    CLEAN = 'clean' in sys.argv
-    BOOT = 'boot' in sys.argv
-    DEBUG = 'debug' in sys.argv
-    VALGRIND = 'valgrind' in sys.argv
-    SANDBOX = 'sandbox' in sys.argv
-    CLEAN = CLEAN or BOOT
-    TEST = TEST or BOOT
         
-    get_libs()
-    build_mymain()
+    # get_libs()
+    # build_mymain()
 
     for mod in ['tokenize','parse','encode','py2bc']: os.system('cd tinypy/; python2 py2bc.py {} {} -nopos '.format( mod + ".py", mod + ".tpc" ))
 
     cmd = sys.argv[1]
     if cmd == "mypy":
-        
-        build_gcc()
+        os.system('gcc -std=c89 -Wall -Wc++-compat  -O3 tinypy/mymain.c -lm -o tinypy/tinypy')
     else:
-        print 'invalid command'
+        print('invalid command')
 
-HELP = """
-python setup.py mypy
-"""
-
-def vars_linux():
-    VARS['$RM'] = 'rm -f'
-    VARS['$VM'] = './vm'
-    VARS['$TINYPY'] = './tinypy'
-    VARS['$SYS'] = '-linux'
-    VARS['$FLAGS'] = ''
-    
-    VARS['$WFLAGS'] = '-std=c89 -Wall -Wc++-compat'
-    #-Wwrite-strings - i think this is included in -Wc++-compat
-    
-    if 'pygame' in MODULES:
-        VARS['$FLAGS'] += ' `sdl-config --cflags --libs` '
-
-    if SANDBOX:
-        VARS['$SYS'] += " -sandbox "
-        VARS['$FLAGS'] += " -DTP_SANDBOX "
-
-def do_cmd(cmd):
-    for k,v in VARS.items():
-        cmd = cmd.replace(k,v)
-    if '$' in cmd:
-        print 'vars_error',cmd
-        sys.exit(-1)
-    if VALGRIND and (cmd.startswith("./") or cmd.startswith("../")):
-        cmd = "valgrind " + cmd
-    
-    print cmd
-    r = os.system(cmd)
-    if r:
-        print 'exit_status',r
-        sys.exit(r)
-        
-def do_chdir(dest):
-    print 'cd',dest
-    os.chdir(dest)
-
-def build_bc(opt=False):
-    out = []
-    for mod in CORE:
-        out.append("""unsigned char tp_%s[] = {"""%mod)
-        fname = mod+".tpc"
-        data = open(fname,'rb').read()
-        cols = 16
-        for n in xrange(0,len(data),cols):
-            out.append(",".join([str(ord(v)) for v in data[n:n+cols]])+',')
-        out.append("""};""")
-    out.append("")
-    f = open('bc.c','wb')
-    f.write('\n'.join(out))
-    f.close()
-    
-def open_tinypy(fname,*args):
-    return open(os.path.join(TOPDIR,'tinypy',fname),*args)
-                
-def py2bc(cmd,mod):
-    src = '%s.py'%mod
-    dest = '%s.tpc'%mod
-    if CLEAN or not os.path.exists(dest) or os.stat(src).st_mtime > os.stat(dest).st_mtime:
-        cmd = cmd.replace('$SRC',src)
-        cmd = cmd.replace('$DEST',dest)
-        do_cmd(cmd)
-    else:
-        print '#',dest,'is up to date'
-
-def build_gcc():
-    do_chdir(os.path.join(TOPDIR,'tinypy'))
-    build_bc(True)
-    if BOOT:
-        do_cmd("gcc $WFLAGS -O2 tpmain.c $FLAGS -lm -o tinypy")
-        do_cmd('$TINYPY tests.py $SYS')
-        print("# OK - we'll try -O3 for extra speed ...")
-        do_cmd("gcc $WFLAGS -O3 tpmain.c $FLAGS -lm -o tinypy")
-        do_cmd('$TINYPY tests.py $SYS')
-    if DEBUG:
-        do_cmd("gcc $WFLAGS -g mymain.c $FLAGS -lm -o ../tinypy/tinypy")
-    else:
-        do_cmd("gcc $WFLAGS -O3 mymain.c $FLAGS -lm -o ../tinypy/tinypy")
-    
-    do_chdir('..')
-    print("# OK")
     
 def get_libs():
     modules = os.listdir('modules')
@@ -214,7 +115,6 @@ def chksize():
         f = open(fname,'r'); t1 += len(f.read()); f.close()
         txt = shrink(fname)
         t2 += len(txt)
-    print "#",t1,t2,t2-65536
     return t2
     
 if __name__ == '__main__':

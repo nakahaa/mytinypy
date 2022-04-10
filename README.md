@@ -1,14 +1,8 @@
-# tinypy
+# mypy
 
-A small Python interpreter
+mypy Python interpreter
 
 ## Build
 
-* $ python setup.py linux pygame
-* $ ./build/tinypy examples/julia.py
-* $ ./build/tinypy your-program-goes-here.py
+* $ python build.py mypy
 
-## Dependencies
-* Python (only for bootstrapping)
-* SDL (for the pygame module)
-* GCC
