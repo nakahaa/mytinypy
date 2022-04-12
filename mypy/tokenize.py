@@ -84,8 +84,8 @@ def do_tokenize(s, i, l):
     indent(0)
     r = T.res
     T = None
-    for t in r:
-        print (t.pos,t.type,t.val)
+    # for t in r:
+    #     print (t.pos,t.type,t.val)
     return r
 
 

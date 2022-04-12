@@ -3,7 +3,6 @@ import sys
 import tokenize
 import parse
 import encode
-import dumptree
 
 global FTYPE
 f = open('type.h', 'r').read()
@@ -106,11 +105,21 @@ def main(src, dest):
     save(dest, r)
 
 def _dumptree(s, fname):
-    print("-------------sytanx tree-----------------")
     
     tokens = tokenize.tokenize(s)
     t = parse.parse(s, tokens)
-    dumptree.genTree(fname, s, t)
+    print("syntax Tree: ")
+    visitTree(t, 0)
+
+def visitTree(t, tabs):
+    print(tabs * " ",t.type, t.val)
+    if t.items is None:
+        return
+
+    for item in t.items:
+        if item is not None:
+            visitTree(item, tabs + 2) 
+
 
 
 def dumptrees(src):
