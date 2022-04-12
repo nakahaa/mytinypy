@@ -18,11 +18,11 @@ ObjType NONE = {NONETYPE};
 #include "bc.c"
 void compile_code(TP)
 {
-    tp_import(tp, 0, "tokenize", tp_tokenize, sizeof(tp_tokenize));
-    tp_import(tp, 0, "parse", tp_parse, sizeof(tp_parse));
-    tp_import(tp, 0, "encode", tp_encode, sizeof(tp_encode));
-    tp_import(tp, 0, "py2bc", tp_py2bc, sizeof(tp_py2bc));
-    tp_ez_call(tp, "py2bc", "_init", NONE);
+    importCall(tp, 0, "tokenize", tp_tokenize, sizeof(tp_tokenize));
+    importCall(tp, 0, "parse", tp_parse, sizeof(tp_parse));
+    importCall(tp, 0, "encode", tp_encode, sizeof(tp_encode));
+    importCall(tp, 0, "py2bc", tp_py2bc, sizeof(tp_py2bc));
+    ezCall(tp, "py2bc", "_init", NONE);
 }
 #else
 void compile_code(TP)
