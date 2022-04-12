@@ -106,11 +106,11 @@ def main(src, dest):
     save(dest, r)
 
 def _dumptree(src):
+    print("-------------sytanx tree-----------------")
     s = load(src)
-    # dumptree.genTree(s, src)
-    tokens = tokenize.tokenize(s)
-    t = parse.parse(s, tokens)
-    print(t)
+    dumptree.genTree(s, src)
+    # tokens = tokenize.tokenize(s)
+    # parse.parse(s, tokens)
 
 def _compile(s, fname):
     tokens = tokenize.tokenize(s)
@@ -119,6 +119,7 @@ def _compile(s, fname):
     return r, tmpCode
 
 def genCode(src):
+    print("visit_")
     s = load(src)
     _, genCodes = _compile(s, src)
     for code in genCodes:

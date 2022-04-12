@@ -298,6 +298,7 @@ def _visit_none(tabs):
 
 
 def visit_symbol(t, tabs):
+    print(" "* tabs, "symbol")
     sets = ['=']
     isets = ['+=', '-=', '*=', '/=', '|=', '&=', '^=']
     cmps = ['<', '>', '<=', '>=', '==', '!=']
@@ -352,6 +353,7 @@ def visit_symbol(t, tabs):
 
 
 def visit_set_ctx(k, v, tabs):
+    print(" "* tabs, "set ctx")
     if k.type == 'name':
         if (D._globals and k.val not in D.vars) or (k.val in D.globals):
             c = visit_string(k, tabs+2)
@@ -435,27 +437,29 @@ def p_filter(items):
 
 
 def visit_import(t, tabs):
+    print(" "* tabs, "import")
     for mod in t.items:
         mod.type = 'string'
         v = visit_call(Token(t.pos, 'call', None, [
             Token(t.pos, 'name', 'import'),
-            mod]))
+            mod]), tabs + 2)
         mod.type = 'name'
         visit_set_ctx(mod, Token(t.pos, 'reg', v), tabs + 2)
 
 
 def visit_from(t, tabs):
+    print(" "* tabs, "from")
     mod = t.items[0]
     mod.type = 'string'
     v = visit(Token(t.pos, 'call', None, [
         Token(t.pos, 'name', 'import'),
-        mod]))
+        mod]), tabs + 2)
     item = t.items[1]
     if item.val == '*':
         free_tmp(visit(Token(t.pos, 'call', None, [
             Token(t.pos, 'name', 'merge'),
             Token(t.pos, 'name', '__dict__'),
-            Token(t.pos, 'reg', v)])))  # REG
+            Token(t.pos, 'reg', v)], tabs + 2)))  # REG
     else:
         item.type = 'string'
         free_tmp(visit_set_ctx(
@@ -467,12 +471,14 @@ def visit_from(t, tabs):
 
 
 def visit_globals(t, tabs):
+    print(" "* tabs, "global")
     for t in t.items:
         if t.val not in D.globals:
             D.globals.append(t.val)
 
 
 def visit_del(tt, tabs):
+    print(" "* tabs, "del")
     for t in tt.items:
         r = visit(t.items[0])
         r2 = visit(t.items[1])
@@ -482,6 +488,7 @@ def visit_del(tt, tabs):
 
 
 def visit_call(t, tabs):
+    print(" "* tabs, "call")
     r = get_tmp(r)
     items = t.items
     fnc = visit(items[0])
@@ -506,7 +513,7 @@ def visit_call(t, tabs):
         free_tmp(t1)
         free_tmp(t2)  # REG
     if e != None:
-        t1 = _visit_none()
+        t1 = _visit_none( tabs + 2)
         code(SET, r, t1, e)
         free_tmp(t1)  # REG
     code(CALL, r, fnc, r)
@@ -527,6 +534,7 @@ def visit_name(t, tabs):
 
 
 def visit_local(t, tabs):
+    print(" "* tabs, "local")
     if t.val in D.rglobals:
         D.error = True
     if t.val not in D.vars:
@@ -547,13 +555,13 @@ def visit_def(tok, tabs, kls=None):
     a, b, c, d = p_filter(items[1].items)
     for p in a:
         v = visit_local(p, tabs + 2)
-        tmp = _visit_none()
+        tmp = _visit_none(tabs + 2)
         code(GET, v, r, tmp)
         free_tmp(tmp)  # REG
     for p in b:
         v = visit_local(p.items[0], tabs + 2)
         visit(p.items[1], v)
-        tmp = _visit_none()
+        tmp = _visit_none(tabs + 2)
         code(IGET, v, r, tmp)
         free_tmp(tmp)  # REG
     if c != None:
@@ -564,7 +572,7 @@ def visit_def(tok, tabs, kls=None):
     if d != None:
         e = visit_local(d.items[0], tabs + 2)
         code(DICT, e, 0, 0)
-        tmp = _visit_none()
+        tmp = _visit_none(tabs + 2)
         code(IGET, e, r, tmp)
         free_tmp(tmp)  # REG
     free_tmp(visit(items[2]))  # REG
@@ -641,10 +649,11 @@ def visit_while(t):
     pop_tag()
 
 
-def visit_for(tok):
+def visit_for(tok, tabs):
+    print(" "* tabs, "for")
     items = tok.items
 
-    reg = visit_local(items[0])
+    reg = visit_local(items[0], tabs + 2)
     itr = visit(items[1])
     i = _visit_number('0')
 
@@ -664,18 +673,20 @@ def visit_for(tok):
 
 
 def visit_comp(t, tabs):
+    print(" "* tabs, "comp")
     name = 'comp:'+get_tag()
-    r = visit_local(Token(t.pos, 'name', name))
+    r = visit_local(Token(t.pos, 'name', name), tabs + 2)
     code(LIST, r, 0, 0)
     key = Token(t.pos, 'get', None, [
         Token(t.pos, 'reg', r),
         Token(t.pos, 'symbol', 'None')])
     ap = Token(t.pos, 'symbol', '=', [key, t.items[0]])
-    visit(Token(t.pos, 'for', None, [t.items[1], t.items[2], ap]))
+    visit(Token(t.pos, 'for', None, [t.items[1], t.items[2], ap]), tabs)
     return r
 
 
-def visit_if(t):
+def visit_if(t, tabs):
+    print(" "* tabs, "if")
     items = t.items
     t = get_tag()
     n = 0
@@ -686,9 +697,9 @@ def visit_if(t):
             code(IF, a)
             free_tmp(a)
             jump(t, n+1)
-            free_tmp(visit(tt.items[1]))  # REG
+            free_tmp(visit(tt.items[1], tabs))  # REG
         elif tt.type == 'else':
-            free_tmp(visit(tt.items[0]))  # REG
+            free_tmp(visit(tt.items[0], tabs))  # REG
         else:
             raise
         jump(t, 'end')
@@ -697,7 +708,8 @@ def visit_if(t):
     tag(t, 'end')
 
 
-def visit_try(t):
+def visit_try(t, tabs):
+    print(" "* tabs, "try")
     items = t.items
     t = get_tag()
     setjmp(t, 'except')
@@ -709,38 +721,43 @@ def visit_try(t):
     tag(t, 'end')
 
 
-def visit_return(t):
+def visit_return(t, tabs):
+    print(" "* tabs, "return")
     if t.items:
-        r = visit(t.items[0])
+        r = visit(t.items[0], tabs +2)
     else:
-        r = _visit_none()
+        r = _visit_none(tabs + 2)
     code(RETURN, r)
     free_tmp(r)
     return
 
 
-def visit_raise(t):
+def visit_raise(t, tabs):
+    print(" "* tabs, "raise")
     if t.items:
-        r = visit(t.items[0])
+        r = visit(t.items[0], tabs + 2 )
     else:
-        r = _visit_none()
+        r = _visit_none(tabs + 2)
     code(RAISE, r)
     free_tmp(r)
     return
 
 
-def visit_statements(t):
+def visit_statements(t, tabs):
+    print(" "* tabs, "statements")
     for tt in t.items:
         free_tmp(visit(tt))
 
 
 def visit_list(t, tabs):
+    print(" "* tabs, "list")
     r = get_tmp(r)
     manage_seq(LIST, r, t.items)
     return r
 
 
 def visit_dict(t, tabs):
+    print(" "* tabs, "dict")
     r = get_tmp(r)
     manage_seq(DICT, r, t.items)
     return r
@@ -748,23 +765,31 @@ def visit_dict(t, tabs):
 
 def visit_get(t, tabs):
     items = t.items
+    print(" "* tabs, "get")
     return infix(GET, items[0], items[1], r)
 
 
 def visit_break(t, tags): 
+    print(" "* tags, "break")
     jump(D.tstack[-1], 'break')
+
 def visit_continue(t, tags): 
+    print(" "* tags, "continue")
     jump(D.tstack[-1], 'continue')
+
 def visit_pass(t, tags): 
+    print(" "* tags, "pass")
     code(PASS)
 
 
 def visit_info(tabs, name='?'):
+    print(" " * tabs, "info")
     code(FILE, free_tmp(_visit_string(D.fname, tabs +2 )))
     code(NAME, free_tmp(_visit_string(name, tabs + 2)))
 
 
 def visit_module(t, tabs):
+    print(" "* tabs, "module")
     visit_info(tabs + 2)
     free_tmp(visit(t.items[0], tag + 2))  # REG
 
