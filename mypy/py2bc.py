@@ -105,18 +105,31 @@ def main(src, dest):
     r, _ = _compile(s, src)
     save(dest, r)
 
-def _dumptree(src):
+def _dumptree(s, fname):
     print("-------------sytanx tree-----------------")
+    
+    tokens = tokenize.tokenize(s)
+    t = parse.parse(s, tokens)
+    dumptree.genTree(fname, s, t)
+
+
+def dumptrees(src):
+    print("visit_")
     s = load(src)
-    dumptree.genTree(s, src)
-    # tokens = tokenize.tokenize(s)
-    # parse.parse(s, tokens)
+    _dumptree(s, src)
 
 def _compile(s, fname):
     tokens = tokenize.tokenize(s)
     t = parse.parse(s, tokens)
     r, tmpCode = encode.encode(fname, s, t)
     return r, tmpCode
+
+def genTokens(src):
+    print("----------------------gen tokens--------------------------")
+    s = load(src)
+    tokens = tokenize.tokenize(s)
+    for token in tokens:
+        print(token.pos, token.type, token.val )
 
 def genCode(src):
     print("visit_")
@@ -133,4 +146,7 @@ if __name__ == '__main__':
         main(sys.argv[1], "tmpCode")
 
     if sys.argv[2] == "dumptree":
-        _dumptree(sys.argv[1])
+        dumptrees(sys.argv[1])
+
+    if sys.argv[2] == "gentokens":
+        genTokens(sys.argv[1])

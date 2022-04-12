@@ -746,7 +746,7 @@ def visit_raise(t, tabs):
 def visit_statements(t, tabs):
     print(" "* tabs, "statements")
     for tt in t.items:
-        free_tmp(visit(tt))
+        free_tmp(visit(tt, tabs + 2))
 
 
 def visit_list(t, tabs):
@@ -817,9 +817,11 @@ def visit(t, tabs):
     if t.pos:
         setpos(t.pos)
     try:
+        print(t.type)
         if t.type in rmap:
             return rmap[t.type](t, tabs)
-        return fmap[t.type](t, tabs)
+        elif t.type in rmap:
+            return fmap[t.type](t, tabs)
     except:
         if D.error:
             raise
@@ -827,13 +829,26 @@ def visit(t, tabs):
         tokenize.u_error('encode', D.code, t.pos)
 
 
-def genTree(fname, s):
-    tokens = tokenize.tokenize(s)
-    t = parse.parse(s, tokens)
-    t = Token((1, 1), 'module', 'module', [t])
+def genTree(fname, s, t):
+    # t = Token((1, 1), 'module', 'module', [t])
     global D
     s = tokenize.clean(s)
     D = DState(s, fname)
     D.begin(True)
-    visit(fname, tabs = 2)
+    visit(t, tabs = 2)
     D.end()
+    out = D.out
+    D = None
+
+
+# def genTree(src):
+#     s = load(src)
+#     tokens = tokenize.tokenize(s)
+#     t = parse.parse(s, tokens)
+#     # t = Token((1, 1), 'module', 'module', [t])
+#     global D
+#     s = tokenize.clean(s)
+#     D = DState(s, src)
+#     D.begin(True)
+#     visit(t, tabs = 2)
+#     D.end()
