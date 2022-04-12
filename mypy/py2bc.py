@@ -3,6 +3,7 @@ import sys
 import tokenize
 import parse
 import encode
+import dumptree
 
 global FTYPE
 f = open('type.h', 'r').read()
@@ -65,6 +66,12 @@ def _compile(s, fname):
     t = parse.parse(s, tokens)
     r, tmpCode = encode.encode(fname, s, t)
     return r, tmpCode
+
+def _dumptree(src, fname):
+    s = load(src)
+    tokens = tokenize.tokenize(s)
+    t = parse.parse(s, tokens)
+    dumptree.genTree(fname, t)
 
 
 def _import(name):
