@@ -73,7 +73,7 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
         TP_META_BEGIN(self,"__get__");
             return tp_call(tp,meta,tp_params_v(tp,1,k));
         TP_META_END;
-        if (self.dict.dtype && _tp_lookup(tp,self,k,&r)) { return r; }
+        if (self.dict.dtype && lookupFunc(tp,self,k,&r)) { return r; }
         return _tp_dict_get(tp,self.dict.val,k,"tp_get");
     } else if (type == LISTTYPE) {
         if (k.type == TP_NUMBER) {

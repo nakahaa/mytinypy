@@ -122,7 +122,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
 
     if (self.type == DICTTYPE) {
         if (self.dict.dtype == 1) {
-            ObjType meta; if (_tp_lookup(tp,self,tp_string("__new__"),&meta)) {
+            ObjType meta; if (lookupFunc(tp,self,tp_string("__new__"),&meta)) {
                 insert_list(tp,params.list.val,0,self);
                 return tp_call(tp,meta,params);
             }
@@ -342,7 +342,7 @@ ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code) {
 
     if (code.type == NONETYPE) {
         tp_params_v(tp,1,fname);
-        code = tp_load(tp);
+        code = loadFunc(tp);
     }
 
     g = tp_dict(tp);
@@ -394,13 +394,13 @@ void tp_builtins(TP) {
     {"max",maxFunc}, {"bind",bindFunc}, {"copy",copyFunc},
     {"import",tp_import_}, {"len",lenFunc}, {"assert",assertFunc},
     {"str",tp_str2}, {"float",tp_float}, {"system",sysFunc},
-    {"istype",isTypeFunc}, {"chr",tp_chr}, {"save",tp_save},
-    {"load",tp_load}, {"fpack",tp_fpack}, {"abs",tp_abs},
-    {"int",tp_int}, {"exec",tp_exec_}, {"exists",tp_exists},
-    {"mtime",tp_mtime}, {"number",tp_float}, {"round",tp_round},
-    {"ord",tp_ord}, {"merge",tp_merge}, {"getraw",tp_getraw},
-    {"setmeta",tp_setmeta}, {"getmeta",tp_getmeta},
-    {"bool", tp_builtins_bool},
+    {"istype",isTypeFunc}, {"chr",tp_chr}, {"save",saveFunc},
+    {"load",loadFunc}, {"fpack",fpackFunc}, {"abs",absFunc},
+    {"int",intFunc}, {"exec",tp_exec_}, {"exists",existFunc},
+    {"mtime",mtimeFunc}, {"number",tp_float}, {"round",tp_round},
+    {"ord",tp_ord}, {"merge",tp_merge}, {"getraw",getrawFunc},
+    {"setmeta",setmetaFunc}, {"getmeta",getmetaFunc},
+    {"bool", boolFunc},
     #ifdef TP_SANDBOX
     {"sandbox",tp_sandbox_},
     #endif
@@ -410,9 +410,9 @@ void tp_builtins(TP) {
         tp_set(tp,tp->builtins,tp_string(b[i].s),tp_fnc(tp,(ObjType (*)(VmType *))b[i].f));
     }
     
-    o = tp_object(tp);
-    tp_set(tp,o,tp_string("__call__"),tp_fnc(tp,tp_object_call));
-    tp_set(tp,o,tp_string("__new__"),tp_fnc(tp,tp_object_new));
+    o = objectFunc(tp);
+    tp_set(tp,o,tp_string("__call__"),tp_fnc(tp,objectCallFunc));
+    tp_set(tp,o,tp_string("__new__"),tp_fnc(tp,newObjFunc));
     tp_set(tp,tp->builtins,tp_string("object"),o);
 }
 

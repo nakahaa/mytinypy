@@ -110,18 +110,18 @@ ObjType tp_float(TP) {
 }
 
 
-ObjType tp_save(TP) {
+ObjType saveFunc(TP) {
     char fname[256]; tp_cstr(tp,TP_STR(),fname,256);
     ObjType v = TP_OBJ();
     FILE *f;
     f = fopen(fname,"wb");
-    if (!f) { tp_raise(NONE,tp_string("(tp_save) IOError: ?")); }
+    if (!f) { tp_raise(NONE,tp_string("(saveFunc) IOError: ?")); }
     fwrite(v.string.val,v.string.len,1,f);
     fclose(f);
     return NONE;
 }
 
-ObjType tp_load(TP) {
+ObjType loadFunc(TP) {
     FILE *f;
     long l;
     ObjType r;
@@ -132,50 +132,49 @@ ObjType tp_load(TP) {
     l = stbuf.st_size;
     f = fopen(fname,"rb");
     if (!f) {
-        tp_raise(NONE,tp_string("(tp_load) IOError: ?"));
+        tp_raise(NONE,tp_string("(loadFunc) IOError: ?"));
     }
     r = to_string(tp,l);
     s = r.string.info->s;
     fread(s,1,l,f);
-/*    if (rr !=l) { printf("hmmn: %d %d\n",rr,(int)l); }*/
     fclose(f);
     return tp_track(tp,r);
 }
 
 
-ObjType tp_fpack(TP) {
+ObjType fpackFunc(TP) {
     tp_num v = TP_NUM();
     ObjType r = to_string(tp,sizeof(tp_num));
     *(tp_num*)r.string.val = v;
     return tp_track(tp,r);
 }
 
-ObjType tp_abs(TP) {
+ObjType absFunc(TP) {
     return tp_number(fabs(tp_float(tp).number.val));
 }
-ObjType tp_int(TP) {
+ObjType intFunc(TP) {
     return tp_number((long)tp_float(tp).number.val);
 }
-tp_num _roundf(tp_num v) {
+tp_num roundfFunc(tp_num v) {
     tp_num av = fabs(v); tp_num iv = (long)av;
     av = (av-iv < 0.5?iv:iv+1);
     return (v<0?-av:av);
 }
 ObjType tp_round(TP) {
-    return tp_number(_roundf(tp_float(tp).number.val));
+    return tp_number(roundfFunc(tp_float(tp).number.val));
 }
 
-ObjType tp_exists(TP) {
+ObjType existFunc(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
     return tp_number(!stat(fname,&stbuf));
 }
 
-ObjType tp_mtime(TP) {
+ObjType mtimeFunc(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
     if (!stat(fname,&stbuf)) { return tp_number(stbuf.st_mtime); }
-    tp_raise(NONE,tp_string("(tp_mtime) IOError: ?"));
+    tp_raise(NONE,tp_string("(mtimeFunc) IOError: ?"));
 }
 
 int _tp_lookup_(TP,ObjType self, ObjType k, ObjType *meta, int depth) {
@@ -196,39 +195,39 @@ int _tp_lookup_(TP,ObjType self, ObjType k, ObjType *meta, int depth) {
     return 0;
 }
 
-int _tp_lookup(TP,ObjType self, ObjType k, ObjType *meta) {
+int lookupFunc(TP,ObjType self, ObjType k, ObjType *meta) {
     return _tp_lookup_(tp,self,k,meta,8);
 }
 
 #define TP_META_BEGIN(self,name) \
     if (self.dict.dtype == 2) { \
-        ObjType meta; if (_tp_lookup(tp,self,tp_string(name),&meta)) {
+        ObjType meta; if (lookupFunc(tp,self,tp_string(name),&meta)) {
 
 #define TP_META_END \
         } \
     }
 
-ObjType tp_setmeta(TP) {
+ObjType setmetaFunc(TP) {
     ObjType self = TP_TYPE(DICTTYPE);
     ObjType meta = TP_TYPE(DICTTYPE);
     self.dict.val->meta = meta;
     return NONE;
 }
 
-ObjType tp_getmeta(TP) {
+ObjType getmetaFunc(TP) {
     ObjType self = TP_TYPE(DICTTYPE);
     return self.dict.val->meta;
 }
 
-ObjType tp_object(TP) {
+ObjType objectFunc(TP) {
     ObjType self = tp_dict(tp);
     self.dict.dtype = 2;
     return self;
 }
 
-ObjType tp_object_new(TP) {
+ObjType newObjFunc(TP) {
     ObjType klass = TP_TYPE(DICTTYPE);
-    ObjType self = tp_object(tp);
+    ObjType self = objectFunc(tp);
     self.dict.val->meta = klass;
     TP_META_BEGIN(self,"__init__");
         tp_call(tp,meta,tp->params);
@@ -236,31 +235,31 @@ ObjType tp_object_new(TP) {
     return self;
 }
 
-ObjType tp_object_call(TP) {
+ObjType objectCallFunc(TP) {
     ObjType self;
     if (tp->params.list.val->len) {
         self = TP_TYPE(DICTTYPE);
         self.dict.dtype = 2;
     } else {
-        self = tp_object(tp);
+        self = objectFunc(tp);
     }
     return self;
 }
 
 
-ObjType tp_getraw(TP) {
+ObjType getrawFunc(TP) {
     ObjType self = TP_TYPE(DICTTYPE);
     self.dict.dtype = 0;
     return self;
 }
 
-ObjType tp_class(TP) {
+ObjType classFunc(TP) {
     ObjType klass = tp_dict(tp);
     klass.dict.val->meta = tp_get(tp,tp->builtins,tp_string("object")); 
     return klass;
 }
 
-ObjType tp_builtins_bool(TP) {
+ObjType boolFunc(TP) {
     ObjType v = TP_OBJ();
     return (tp_number(tp_bool(tp, v)));
 }
