@@ -10,15 +10,15 @@ VmType *_vm_init(void) {
     tp->cur = 0;
     tp->jmp = 0;
     tp->ex = tp_None;
-    tp->root = tp_list_nt(tp);
+    tp->root = list_nt(tp);
     for (i=0; i<256; i++) { tp->chars[i][0]=i; }
     tp_gc_init(tp);
-    tp->_regs = tp_list(tp);
+    tp->_regs = to_list(tp);
     for (i=0; i<TP_REGS; i++) { tp_set(tp,tp->_regs,tp_None,tp_None); }
     tp->builtins = tp_dict(tp);
     tp->modules = tp_dict(tp);
-    tp->_params = tp_list(tp);
-    for (i=0; i<TP_FRAMES; i++) { tp_set(tp,tp->_params,tp_None,tp_list(tp)); }
+    tp->_params = to_list(tp);
+    for (i=0; i<TP_FRAMES; i++) { tp_set(tp,tp->_params,tp_None,to_list(tp)); }
     tp_set(tp,tp->root,tp_None,tp->builtins);
     tp_set(tp,tp->root,tp_None,tp->modules);
     tp_set(tp,tp->root,tp_None,tp->_regs);
@@ -36,7 +36,7 @@ VmType *_vm_init(void) {
 
 void tp_deinit(TP) {
     while (tp->root.list.val->len) {
-        _tp_list_pop(tp,tp->root.list.val,0,"tp_deinit");
+        pop_list(tp,tp->root.list.val,0,"tp_deinit");
     }
     tp_full(tp); tp_full(tp);
     tp_delete(tp,tp->root);
@@ -123,7 +123,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
     if (self.type == TP_DICT) {
         if (self.dict.dtype == 1) {
             ObjType meta; if (_tp_lookup(tp,self,tp_string("__new__"),&meta)) {
-                _tp_list_insert(tp,params.list.val,0,self);
+                insert_list(tp,params.list.val,0,self);
                 return tp_call(tp,meta,params);
             }
         } else if (self.dict.dtype == 2) {
@@ -142,7 +142,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
         tp_frame(tp,self.fnc.info->globals,self.fnc.info->code,&dest);
         if ((self.fnc.ftype&2)) {
             tp->frames[tp->cur].regs[0] = params;
-            _tp_list_insert(tp,params.list.val,0,self.fnc.info->self);
+            insert_list(tp,params.list.val,0,self.fnc.info->self);
         } else {
             tp->frames[tp->cur].regs[0] = params;
         }
@@ -206,11 +206,11 @@ int tp_step(TP) {
         case TP_IMOD:  RA = tp_mod(tp,RB,RC); break;
         case TP_ILSH:  RA = tp_lsh(tp,RB,RC); break;
         case TP_IRSH:  RA = tp_rsh(tp,RB,RC); break;
-        case TP_ICMP: RA = tp_number(tp_cmp(tp,RB,RC)); break;
-        case TP_INE: RA = tp_number(tp_cmp(tp,RB,RC)!=0); break;
-        case TP_IEQ: RA = tp_number(tp_cmp(tp,RB,RC)==0); break;
-        case TP_ILE: RA = tp_number(tp_cmp(tp,RB,RC)<=0); break;
-        case TP_ILT: RA = tp_number(tp_cmp(tp,RB,RC)<0); break;
+        case TP_ICMP: RA = tp_number(compare(tp,RB,RC)); break;
+        case TP_INE: RA = tp_number(compare(tp,RB,RC)!=0); break;
+        case TP_IEQ: RA = tp_number(compare(tp,RB,RC)==0); break;
+        case TP_ILE: RA = tp_number(compare(tp,RB,RC)<=0); break;
+        case TP_ILT: RA = tp_number(compare(tp,RB,RC)<0); break;
         case TP_IBITNOT:  RA = tp_bitwise_not(tp,RB); break;
         case TP_INOT: RA = tp_number(!tp_bool(tp,RB)); break;
         case TP_IPASS: break;
@@ -250,7 +250,7 @@ int tp_step(TP) {
             }
             break;
         case TP_IDICT: RA = tp_dict_n(tp,VC/2,&RB); break;
-        case TP_ILIST: RA = tp_list_n(tp,VC,&RB); break;
+        case TP_ILIST: RA = to_list_n(tp,VC,&RB); break;
         case TP_IPARAMS: RA = tp_params_n(tp,VC,&RB); break;
         case TP_ILEN: RA = tp_len(tp,RB); break;
         case TP_IJUMP: cur += SVBC; continue; break;
@@ -418,9 +418,9 @@ void tp_builtins(TP) {
 
 
 void tp_args(TP,int argc, char *argv[]) {
-    ObjType self = tp_list(tp);
+    ObjType self = to_list(tp);
     int i;
-    for (i=1; i<argc; i++) { _tp_list_append(tp,self.list.val,tp_string(argv[i])); }
+    for (i=1; i<argc; i++) { append_list(tp,self.list.val,tp_string(argv[i])); }
     tp_set(tp,tp->builtins,tp_string("ARGV"),self);
 }
 

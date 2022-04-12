@@ -68,7 +68,7 @@ int _tp_dict_hash_find(TP,_dict *self, int hash, ObjType k) {
         if (self->items[n].used == 0) { break; }
         if (self->items[n].used < 0) { continue; }
         if (self->items[n].hash != hash) { continue; }
-        if (tp_cmp(tp,self->items[n].key,k) != 0) { continue; }
+        if (compare(tp,self->items[n].key,k) != 0) { continue; }
         return n;
     }
     return -1;

@@ -204,7 +204,7 @@ ObjType tp_len(TP,ObjType);
 void tp_del(TP,ObjType,ObjType);
 ObjType tp_str(TP,ObjType);
 int tp_bool(TP,ObjType);
-int tp_cmp(TP,ObjType,ObjType);
+int compare(TP,ObjType,ObjType);
 void _tp_raise(TP,ObjType);
 ObjType _printf(TP,char const *fmt,...);
 ObjType tp_track(TP,ObjType);
@@ -258,7 +258,7 @@ tp_inline static ObjType tp_type(TP,int t,ObjType v) {
 #define TP_LOOP(e) \
     int __l = tp->params.list.val->len; \
     int __i; for (__i=0; __i<__l; __i++) { \
-    (e) = _tp_list_get(tp,tp->params.list.val,__i,"TP_LOOP");
+    (e) = get_list(tp,tp->params.list.val,__i,"TP_LOOP");
 #define TP_END \
     }
 
@@ -291,7 +291,7 @@ ObjType _tp_dcall(TP,ObjType fnc(TP)) {
 
 ObjType _tp_tcall(TP,ObjType fnc) {
     if (fnc.fnc.ftype&2) {
-        _tp_list_insert(tp,tp->params.list.val,0,fnc.fnc.info->self);
+        insert_list(tp,tp->params.list.val,0,fnc.fnc.info->self);
     }
     return _tp_dcall(tp,(ObjType (*)(VmType *))fnc.fnc.cfnc);
 }
@@ -341,7 +341,7 @@ ObjType tp_params(TP) {
 
 ObjType tp_params_n(TP,int n, ObjType argv[]) {
     ObjType r = tp_params(tp);
-    int i; for (i=0; i<n; i++) { _tp_list_append(tp,r.list.val,argv[i]); }
+    int i; for (i=0; i<n; i++) { append_list(tp,r.list.val,argv[i]); }
     return r;
 }
 
@@ -351,7 +351,7 @@ ObjType tp_params_v(TP,int n,...) {
     ObjType r = tp_params(tp);
     va_list a; va_start(a,n);
     for (i=0; i<n; i++) {
-        _tp_list_append(tp,r.list.val,va_arg(a,ObjType));
+        append_list(tp,r.list.val,va_arg(a,ObjType));
     }
     va_end(a);
     return r;

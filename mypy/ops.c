@@ -40,7 +40,7 @@ ObjType tp_has(TP,ObjType self, ObjType k) {
     } else if (type == TP_STRING && k.type == TP_STRING) {
         return tp_number(_str_ind_(self,k)!=-1);
     } else if (type == TP_LIST) {
-        return tp_number(_tp_list_find(tp,self.list.val,k)!=-1);
+        return tp_number(find_list(tp,self.list.val,k)!=-1);
     }
     tp_raise(tp_None,tp_string("(tp_has) TypeError: iterable argument required"));
 }
@@ -80,26 +80,26 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
             int l = tp_len(tp,self).number.val;
             int n = k.number.val;
             n = (n<0?l+n:n);
-            return _tp_list_get(tp,self.list.val,n,"tp_get");
+            return get_list(tp,self.list.val,n,"tp_get");
         } else if (k.type == TP_STRING) {
-            if (tp_cmp(tp,tp_string("append"),k) == 0) {
-                return tp_method(tp,self,tp_append);
-            } else if (tp_cmp(tp,tp_string("pop"),k) == 0) {
-                return tp_method(tp,self,tp_pop);
-            } else if (tp_cmp(tp,tp_string("index"),k) == 0) {
-                return tp_method(tp,self,tp_index);
-            } else if (tp_cmp(tp,tp_string("sort"),k) == 0) {
-                return tp_method(tp,self,tp_sort);
-            } else if (tp_cmp(tp,tp_string("extend"),k) == 0) {
-                return tp_method(tp,self,tp_extend);
-            } else if (tp_cmp(tp,tp_string("*"),k) == 0) {
+            if (compare(tp,tp_string("append"),k) == 0) {
+                return tp_method(tp,self,append);
+            } else if (compare(tp,tp_string("pop"),k) == 0) {
+                return tp_method(tp,self,pop);
+            } else if (compare(tp,tp_string("index"),k) == 0) {
+                return tp_method(tp,self,index_list);
+            } else if (compare(tp,tp_string("sort"),k) == 0) {
+                return tp_method(tp,self,sort);
+            } else if (compare(tp,tp_string("extend"),k) == 0) {
+                return tp_method(tp,self,extend);
+            } else if (compare(tp,tp_string("*"),k) == 0) {
                 tp_params_v(tp,1,self);
                 r = tp_copy(tp);
                 self.list.val->len=0;
                 return r;
             }
         } else if (k.type == TP_NONE) {
-            return _tp_list_pop(tp,self.list.val,0,"tp_get");
+            return pop_list(tp,self.list.val,0,"tp_get");
         }
     } else if (type == TP_STRING) {
         if (k.type == TP_NUMBER) {
@@ -108,15 +108,15 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
             n = (n<0?l+n:n);
             if (n >= 0 && n < l) { return tp_string_n(tp->chars[(unsigned char)self.string.val[n]],1); }
         } else if (k.type == TP_STRING) {
-            if (tp_cmp(tp,tp_string("join"),k) == 0) {
+            if (compare(tp,tp_string("join"),k) == 0) {
                 return tp_method(tp,self,str_join);
-            } else if (tp_cmp(tp,tp_string("split"),k) == 0) {
+            } else if (compare(tp,tp_string("split"),k) == 0) {
                 return tp_method(tp,self,strsplit);
-            } else if (tp_cmp(tp,tp_string("index"),k) == 0) {
+            } else if (compare(tp,tp_string("index"),k) == 0) {
                 return tp_method(tp,self,_str_index);
-            } else if (tp_cmp(tp,tp_string("strip"),k) == 0) {
+            } else if (compare(tp,tp_string("strip"),k) == 0) {
                 return tp_method(tp,self,tp_strip);
-            } else if (tp_cmp(tp,tp_string("replace"),k) == 0) {
+            } else if (compare(tp,tp_string("replace"),k) == 0) {
                 return tp_method(tp,self,tp_replace);
             }
         }
@@ -136,7 +136,7 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
         else { tp_raise(tp_None,tp_string("(tp_get) TypeError: indices must be numbers")); }
         a = _tp_max(0,(a<0?l+a:a)); b = _tp_min(l,(b<0?l+b:b));
         if (type == TP_LIST) {
-            return tp_list_n(tp,b-a,&self.list.val->items[a]);
+            return to_list_n(tp,b-a,&self.list.val->items[a]);
         } else if (type == TP_STRING) {
             return strsub(tp,self,a,b);
         }
@@ -171,14 +171,14 @@ void tp_set(TP,ObjType self, ObjType k, ObjType v) {
         return;
     } else if (type == TP_LIST) {
         if (k.type == TP_NUMBER) {
-            _tp_list_set(tp,self.list.val,k.number.val,v,"tp_set");
+            set_list(tp,self.list.val,k.number.val,v,"tp_set");
             return;
         } else if (k.type == TP_NONE) {
-            _tp_list_append(tp,self.list.val,v);
+            append_list(tp,self.list.val,v);
             return;
         } else if (k.type == TP_STRING) {
-            if (tp_cmp(tp,tp_string("*"),k) == 0) {
-                tp_params_v(tp,2,self,v); tp_extend(tp);
+            if (compare(tp,tp_string("*"),k) == 0) {
+                tp_params_v(tp,2,self,v); extend(tp);
                 return;
             }
         }
@@ -200,7 +200,7 @@ ObjType tp_add(TP,ObjType a, ObjType b) {
         tp_params_v(tp,1,a);
         r = tp_copy(tp);
         tp_params_v(tp,2,r,b);
-        tp_extend(tp);
+        extend(tp);
         return r;
     }
     tp_raise(tp_None,tp_string("(tp_add) TypeError: ?"));
@@ -240,7 +240,7 @@ ObjType tp_len(TP,ObjType self) {
     tp_raise(tp_None,tp_string("(tp_len) TypeError: len() of unsized object"));
 }
 
-int tp_cmp(TP,ObjType a, ObjType b) {
+int compare(TP,ObjType a, ObjType b) {
     if (a.type != b.type) { return a.type-b.type; }
     switch(a.type) {
         case TP_NONE: return 0;
@@ -256,7 +256,7 @@ int tp_cmp(TP,ObjType a, ObjType b) {
         case TP_LIST: {
             int n,v; for(n=0;n<_tp_min(a.list.val->len,b.list.val->len);n++) {
         ObjType aa = a.list.val->items[n]; ObjType bb = b.list.val->items[n];
-            if (aa.type == TP_LIST && bb.type == TP_LIST) { v = aa.list.val-bb.list.val; } else { v = tp_cmp(tp,aa,bb); }
+            if (aa.type == TP_LIST && bb.type == TP_LIST) { v = aa.list.val-bb.list.val; } else { v = compare(tp,aa,bb); }
             if (v) { return v; } }
             return a.list.val->len-b.list.val->len;
         }
@@ -264,7 +264,7 @@ int tp_cmp(TP,ObjType a, ObjType b) {
         case TP_FNC: return a.fnc.info - b.fnc.info;
         case TP_DATA: return (char*)a.data.val - (char*)b.data.val;
     }
-    tp_raise(0,tp_string("(tp_cmp) TypeError: ?"));
+    tp_raise(0,tp_string("(compare) TypeError: ?"));
 }
 
 #define TP_OP(name,expr) \

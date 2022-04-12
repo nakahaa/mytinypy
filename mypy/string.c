@@ -75,14 +75,14 @@ ObjType str_join(TP) {
 ObjType strsplit(TP) {
     ObjType v = TP_OBJ();
     ObjType d = TP_OBJ();
-    ObjType r = tp_list(tp);
+    ObjType r = to_list(tp);
 
     int i;
     while ((i=_str_ind_(v,d))!=-1) {
-        _tp_list_append(tp,r.list.val,strsub(tp,v,0,i));
+        append_list(tp,r.list.val,strsub(tp,v,0,i));
         v.string.val += i + d.string.len; v.string.len -= i + d.string.len;
     }
-    _tp_list_append(tp,r.list.val,strsub(tp,v,0,v.string.len));
+    append_list(tp,r.list.val,strsub(tp,v,0,v.string.len));
     return r;
 }
 

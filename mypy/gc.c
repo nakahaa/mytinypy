@@ -3,10 +3,10 @@ void tp_grey(TP,ObjType v) {
     if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data) { return; }
     *v.gci.data = 1;
     if (v.type == TP_STRING || v.type == TP_DATA) {
-        _tp_list_appendx(tp,tp->black,v);
+        app_list(tp,tp->black,v);
         return;
     }
-    _tp_list_appendx(tp,tp->grey,v);
+    app_list(tp,tp->grey,v);
 }
 
 void tp_follow(TP,ObjType v) {
@@ -45,22 +45,22 @@ void tp_reset(TP) {
 }
 
 void tp_gc_init(TP) {
-    tp->white = _tp_list_new(tp);
-    tp->grey = _tp_list_new(tp);
-    tp->black = _tp_list_new(tp);
+    tp->white = new_list(tp);
+    tp->grey = new_list(tp);
+    tp->black = new_list(tp);
     tp->steps = 0;
 }
 
 void tp_gc_deinit(TP) {
-    _tp_list_free(tp, tp->white);
-    _tp_list_free(tp, tp->grey);
-    _tp_list_free(tp, tp->black);
+    free_list(tp, tp->white);
+    free_list(tp, tp->grey);
+    free_list(tp, tp->black);
 }
 
 void tp_delete(TP,ObjType v) {
     int type = v.type;
     if (type == TP_LIST) {
-        _tp_list_free(tp, v.list.val);
+        free_list(tp, v.list.val);
         return;
     } else if (type == TP_DICT) {
         _tp_dict_free(tp, v.dict.val);
@@ -97,9 +97,9 @@ void _tp_gcinc(TP) {
     if (!tp->grey->len) {
         return;
     }
-    v = _tp_list_pop(tp,tp->grey,tp->grey->len-1,"_tp_gcinc");
+    v = pop_list(tp,tp->grey,tp->grey->len-1,"_tp_gcinc");
     tp_follow(tp,v);
-    _tp_list_appendx(tp,tp->black,v);
+    app_list(tp,tp->black,v);
 }
 
 void tp_full(TP) {

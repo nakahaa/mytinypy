@@ -22,7 +22,7 @@ ObjType tp_min(TP) {
     ObjType r = TP_OBJ();
     ObjType e;
     TP_LOOP(e)
-        if (tp_cmp(tp,r,e) > 0) { r = e; }
+        if (compare(tp,r,e) > 0) { r = e; }
     TP_END;
     return r;
 }
@@ -31,7 +31,7 @@ ObjType tp_max(TP) {
     ObjType r = TP_OBJ();
     ObjType e;
     TP_LOOP(e)
-        if (tp_cmp(tp,r,e) < 0) { r = e; }
+        if (compare(tp,r,e) < 0) { r = e; }
     TP_END;
     return r;
 }
@@ -40,7 +40,7 @@ ObjType tp_copy(TP) {
     ObjType r = TP_OBJ();
     int type = r.type;
     if (type == TP_LIST) {
-        return _tp_list_copy(tp,r);
+        return cp_list(tp,r);
     } else if (type == TP_DICT) {
         return _tp_dict_copy(tp,r);
     }
@@ -61,7 +61,7 @@ ObjType tp_assert(TP) {
 
 ObjType tp_range(TP) {
     int a,b,c,i;
-    ObjType r = tp_list(tp);
+    ObjType r = to_list(tp);
     switch (tp->params.list.val->len) {
         case 1: a = 0; b = TP_NUM(); c = 1; break;
         case 2:
@@ -70,7 +70,7 @@ ObjType tp_range(TP) {
     }
     if (c != 0) {
         for (i=a; (c>0) ? i<b : i>b; i+=c) {
-            _tp_list_append(tp,r.list.val,tp_number(i));
+            append_list(tp,r.list.val,tp_number(i));
         }
     }
     return r;
@@ -85,12 +85,12 @@ ObjType tp_system(TP) {
 ObjType tp_istype(TP) {
     ObjType v = TP_OBJ();
     ObjType t = TP_STR();
-    if (tp_cmp(tp,t,tp_string("string")) == 0) { return tp_number(v.type == TP_STRING); }
-    if (tp_cmp(tp,t,tp_string("list")) == 0) { return tp_number(v.type == TP_LIST); }
-    if (tp_cmp(tp,t,tp_string("dict")) == 0) { return tp_number(v.type == TP_DICT); }
-    if (tp_cmp(tp,t,tp_string("number")) == 0) { return tp_number(v.type == TP_NUMBER); }
-    if (tp_cmp(tp,t,tp_string("fnc")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) == 0); }
-    if (tp_cmp(tp,t,tp_string("method")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) != 0); }
+    if (compare(tp,t,tp_string("string")) == 0) { return tp_number(v.type == TP_STRING); }
+    if (compare(tp,t,tp_string("list")) == 0) { return tp_number(v.type == TP_LIST); }
+    if (compare(tp,t,tp_string("dict")) == 0) { return tp_number(v.type == TP_DICT); }
+    if (compare(tp,t,tp_string("number")) == 0) { return tp_number(v.type == TP_NUMBER); }
+    if (compare(tp,t,tp_string("fnc")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) == 0); }
+    if (compare(tp,t,tp_string("method")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) != 0); }
     tp_raise(tp_None,tp_string("(is_type) TypeError: ?"));
 }
 
