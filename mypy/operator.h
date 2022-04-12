@@ -24,7 +24,7 @@ ObjType tp_str(TP, ObjType self)
     }
     else if (type == NONETYPE)
     {
-        return tp_string("None");
+        return mkstring("None");
     }
     else if (type == DATATYPE)
     {
@@ -34,10 +34,10 @@ ObjType tp_str(TP, ObjType self)
     {
         return _printf(tp, "<fnc 0x%x>", self.fnc.info);
     }
-    return tp_string("<?>");
+    return mkstring("<?>");
 }
 
-int tp_bool(TP, ObjType v)
+int mk_bool(TP, ObjType v)
 {
     switch (v.type)
     {
@@ -55,7 +55,7 @@ int tp_bool(TP, ObjType v)
     return 1;
 }
 
-ObjType tp_has(TP, ObjType self, ObjType k)
+ObjType has(TP, ObjType self, ObjType k)
 {
     int type = self.type;
     if (type == DICTTYPE)
@@ -68,24 +68,24 @@ ObjType tp_has(TP, ObjType self, ObjType k)
     }
     else if (type == TP_STRING && k.type == TP_STRING)
     {
-        return tp_number(_str_ind_(self, k) != -1);
+        return number(_str_ind_(self, k) != -1);
     }
     else if (type == LISTTYPE)
     {
-        return tp_number(find_list(tp, self.list.val, k) != -1);
+        return number(find_list(tp, self.list.val, k) != -1);
     }
-    tp_raise(NONE, tp_string("(tp_has) TypeError: iterable argument required"));
+    tp_raise(NONE, mkstring("(has) TypeError: iterable argument required"));
 }
 
-void tp_del(TP, ObjType self, ObjType k)
+void del(TP, ObjType self, ObjType k)
 {
     int type = self.type;
     if (type == DICTTYPE)
     {
-        _tp_dict_del(tp, self.dict.val, k, "tp_del");
+        _tp_dict_del(tp, self.dict.val, k, "del");
         return;
     }
-    tp_raise(, tp_string("(tp_del) TypeError: object does not support item deletion"));
+    tp_raise(, mkstring("(del) TypeError: object does not support item deletion"));
 }
 
 ObjType tp_iter(TP, ObjType self, ObjType k)
@@ -93,62 +93,62 @@ ObjType tp_iter(TP, ObjType self, ObjType k)
     int type = self.type;
     if (type == LISTTYPE || type == TP_STRING)
     {
-        return tp_get(tp, self, k);
+        return get(tp, self, k);
     }
     if (type == DICTTYPE && k.type == TP_NUMBER)
     {
         return self.dict.val->items[_tp_dict_next(tp, self.dict.val)].key;
     }
-    tp_raise(NONE, tp_string("(tp_iter) TypeError: iteration over non-sequence"));
+    tp_raise(NONE, mkstring("(tp_iter) TypeError: iteration over non-sequence"));
 }
 
-ObjType tp_get(TP, ObjType self, ObjType k)
+ObjType get(TP, ObjType self, ObjType k)
 {
     int type = self.type;
     ObjType r;
     if (type == DICTTYPE)
     {
         TP_META_BEGIN(self, "__get__");
-        return tp_call(tp, meta, tp_params_v(tp, 1, k));
+        return callfunc(tp, meta, tp_params_v(tp, 1, k));
         TP_META_END;
         if (self.dict.dtype && lookupFunc(tp, self, k, &r))
         {
             return r;
         }
-        return _tp_dict_get(tp, self.dict.val, k, "tp_get");
+        return _tp_dict_get(tp, self.dict.val, k, "get");
     }
     else if (type == LISTTYPE)
     {
         if (k.type == TP_NUMBER)
         {
-            int l = tp_len(tp, self).number.val;
+            int l = len_func(tp, self).number.val;
             int n = k.number.val;
             n = (n < 0 ? l + n : n);
-            return get_list(tp, self.list.val, n, "tp_get");
+            return get_list(tp, self.list.val, n, "get");
         }
         else if (k.type == TP_STRING)
         {
-            if (compare(tp, tp_string("append"), k) == 0)
+            if (compare(tp, mkstring("append"), k) == 0)
             {
                 return tp_method(tp, self, append);
             }
-            else if (compare(tp, tp_string("pop"), k) == 0)
+            else if (compare(tp, mkstring("pop"), k) == 0)
             {
                 return tp_method(tp, self, pop);
             }
-            else if (compare(tp, tp_string("index"), k) == 0)
+            else if (compare(tp, mkstring("index"), k) == 0)
             {
                 return tp_method(tp, self, index_list);
             }
-            else if (compare(tp, tp_string("sort"), k) == 0)
+            else if (compare(tp, mkstring("sort"), k) == 0)
             {
                 return tp_method(tp, self, sort);
             }
-            else if (compare(tp, tp_string("extend"), k) == 0)
+            else if (compare(tp, mkstring("extend"), k) == 0)
             {
                 return tp_method(tp, self, extend);
             }
-            else if (compare(tp, tp_string("*"), k) == 0)
+            else if (compare(tp, mkstring("*"), k) == 0)
             {
                 tp_params_v(tp, 1, self);
                 r = copyFunc(tp);
@@ -158,7 +158,7 @@ ObjType tp_get(TP, ObjType self, ObjType k)
         }
         else if (k.type == NONETYPE)
         {
-            return pop_list(tp, self.list.val, 0, "tp_get");
+            return pop_list(tp, self.list.val, 0, "get");
         }
     }
     else if (type == TP_STRING)
@@ -175,23 +175,23 @@ ObjType tp_get(TP, ObjType self, ObjType k)
         }
         else if (k.type == TP_STRING)
         {
-            if (compare(tp, tp_string("join"), k) == 0)
+            if (compare(tp, mkstring("join"), k) == 0)
             {
                 return tp_method(tp, self, str_join);
             }
-            else if (compare(tp, tp_string("split"), k) == 0)
+            else if (compare(tp, mkstring("split"), k) == 0)
             {
                 return tp_method(tp, self, strsplit);
             }
-            else if (compare(tp, tp_string("index"), k) == 0)
+            else if (compare(tp, mkstring("index"), k) == 0)
             {
                 return tp_method(tp, self, _str_index);
             }
-            else if (compare(tp, tp_string("strip"), k) == 0)
+            else if (compare(tp, mkstring("strip"), k) == 0)
             {
                 return tp_method(tp, self, tp_strip);
             }
-            else if (compare(tp, tp_string("replace"), k) == 0)
+            else if (compare(tp, mkstring("replace"), k) == 0)
             {
                 return tp_method(tp, self, tp_replace);
             }
@@ -202,8 +202,8 @@ ObjType tp_get(TP, ObjType self, ObjType k)
     {
         int a, b, l;
         ObjType tmp;
-        l = tp_len(tp, self).number.val;
-        tmp = tp_get(tp, k, tp_number(0));
+        l = len_func(tp, self).number.val;
+        tmp = get(tp, k, number(0));
         if (tmp.type == TP_NUMBER)
         {
             a = tmp.number.val;
@@ -214,9 +214,9 @@ ObjType tp_get(TP, ObjType self, ObjType k)
         }
         else
         {
-            tp_raise(NONE, tp_string("(tp_get) TypeError: indices must be numbers"));
+            tp_raise(NONE, mkstring("(get) TypeError: indices must be numbers"));
         }
-        tmp = tp_get(tp, k, tp_number(1));
+        tmp = get(tp, k, number(1));
         if (tmp.type == TP_NUMBER)
         {
             b = tmp.number.val;
@@ -227,13 +227,13 @@ ObjType tp_get(TP, ObjType self, ObjType k)
         }
         else
         {
-            tp_raise(NONE, tp_string("(tp_get) TypeError: indices must be numbers"));
+            tp_raise(NONE, mkstring("(get) TypeError: indices must be numbers"));
         }
         a = _tp_max(0, (a < 0 ? l + a : a));
         b = _tp_min(l, (b < 0 ? l + b : b));
         if (type == LISTTYPE)
         {
-            return to_list_n(tp, b - a, &self.list.val->items[a]);
+            return list_n(tp, b - a, &self.list.val->items[a]);
         }
         else if (type == TP_STRING)
         {
@@ -241,10 +241,10 @@ ObjType tp_get(TP, ObjType self, ObjType k)
         }
     }
 
-    tp_raise(NONE, tp_string("(tp_get) TypeError: ?"));
+    tp_raise(NONE, mkstring("(get) TypeError: ?"));
 }
 
-int tp_iget(TP, ObjType *r, ObjType self, ObjType k)
+int iget(TP, ObjType *r, ObjType self, ObjType k)
 {
     if (self.type == DICTTYPE)
     {
@@ -261,19 +261,19 @@ int tp_iget(TP, ObjType *r, ObjType self, ObjType k)
     {
         return 0;
     }
-    *r = tp_get(tp, self, k);
+    *r = get(tp, self, k);
     tp_grey(tp, *r);
     return 1;
 }
 
-void tp_set(TP, ObjType self, ObjType k, ObjType v)
+void set(TP, ObjType self, ObjType k, ObjType v)
 {
     int type = self.type;
 
     if (type == DICTTYPE)
     {
         TP_META_BEGIN(self, "__set__");
-        tp_call(tp, meta, tp_params_v(tp, 2, k, v));
+        callfunc(tp, meta, tp_params_v(tp, 2, k, v));
         return;
         TP_META_END;
         _tp_dict_set(tp, self.dict.val, k, v);
@@ -283,7 +283,7 @@ void tp_set(TP, ObjType self, ObjType k, ObjType v)
     {
         if (k.type == TP_NUMBER)
         {
-            set_list(tp, self.list.val, k.number.val, v, "tp_set");
+            set_list(tp, self.list.val, k.number.val, v, "set");
             return;
         }
         else if (k.type == NONETYPE)
@@ -293,7 +293,7 @@ void tp_set(TP, ObjType self, ObjType k, ObjType v)
         }
         else if (k.type == TP_STRING)
         {
-            if (compare(tp, tp_string("*"), k) == 0)
+            if (compare(tp, mkstring("*"), k) == 0)
             {
                 tp_params_v(tp, 2, self, v);
                 extend(tp);
@@ -301,14 +301,14 @@ void tp_set(TP, ObjType self, ObjType k, ObjType v)
             }
         }
     }
-    tp_raise(, tp_string("(tp_set) TypeError: object does not support item assignment"));
+    tp_raise(, mkstring("(set) TypeError: object does not support item assignment"));
 }
 
-ObjType tp_add(TP, ObjType a, ObjType b)
+ObjType add(TP, ObjType a, ObjType b)
 {
     if (a.type == TP_NUMBER && a.type == b.type)
     {
-        return tp_number(a.number.val + b.number.val);
+        return number(a.number.val + b.number.val);
     }
     else if (a.type == TP_STRING && a.type == b.type)
     {
@@ -328,14 +328,14 @@ ObjType tp_add(TP, ObjType a, ObjType b)
         extend(tp);
         return r;
     }
-    tp_raise(NONE, tp_string("(tp_add) TypeError: ?"));
+    tp_raise(NONE, mkstring("(add) TypeError: ?"));
 }
 
 ObjType tp_mul(TP, ObjType a, ObjType b)
 {
     if (a.type == TP_NUMBER && a.type == b.type)
     {
-        return tp_number(a.number.val * b.number.val);
+        return number(a.number.val * b.number.val);
     }
     else if ((a.type == TP_STRING && b.type == TP_NUMBER) ||
              (a.type == TP_NUMBER && b.type == TP_STRING))
@@ -362,26 +362,26 @@ ObjType tp_mul(TP, ObjType a, ObjType b)
         }
         return tp_track(tp, r);
     }
-    tp_raise(NONE, tp_string("(tp_mul) TypeError: ?"));
+    tp_raise(NONE, mkstring("(tp_mul) TypeError: ?"));
 }
 
-ObjType tp_len(TP, ObjType self)
+ObjType len_func(TP, ObjType self)
 {
     int type = self.type;
     if (type == TP_STRING)
     {
-        return tp_number(self.string.len);
+        return number(self.string.len);
     }
     else if (type == DICTTYPE)
     {
-        return tp_number(self.dict.val->len);
+        return number(self.dict.val->len);
     }
     else if (type == LISTTYPE)
     {
-        return tp_number(self.list.val->len);
+        return number(self.list.val->len);
     }
 
-    tp_raise(NONE, tp_string("(tp_len) TypeError: len() of unsized object"));
+    tp_raise(NONE, mkstring("(len_func) TypeError: len() of unsized object"));
 }
 
 int compare(TP, ObjType a, ObjType b)
@@ -435,7 +435,7 @@ int compare(TP, ObjType a, ObjType b)
     case DATATYPE:
         return (char *)a.data.val - (char *)b.data.val;
     }
-    tp_raise(0, tp_string("(compare) TypeError: ?"));
+    tp_raise(0, mkstring("(compare) TypeError: ?"));
 }
 
 #define TP_OP(name, expr)                                                                \
@@ -445,9 +445,9 @@ int compare(TP, ObjType a, ObjType b)
         {                                                                                \
             tp_num a = _a.number.val;                                                    \
             tp_num b = _b.number.val;                                                    \
-            return tp_number(expr);                                                      \
+            return number(expr);                                                      \
         }                                                                                \
-        tp_raise(NONE, tp_string("(" #name ") TypeError: unsupported operand type(s)")); \
+        tp_raise(NONE, mkstring("(" #name ") TypeError: unsupported operand type(s)")); \
     }
 
 TP_OP(tp_bitwise_and, ((long)a) & ((long)b));
@@ -460,11 +460,11 @@ TP_OP(tp_sub, a - b);
 TP_OP(tp_div, a / b);
 TP_OP(tp_pow, pow(a, b));
 
-ObjType tp_bitwise_not(TP, ObjType a)
+ObjType bitwise_not(TP, ObjType a)
 {
     if (a.type == TP_NUMBER)
     {
-        return tp_number(~(long)a.number.val);
+        return number(~(long)a.number.val);
     }
-    tp_raise(NONE, tp_string("(tp_bitwise_not) TypeError: unsupported operand type"));
+    tp_raise(NONE, mkstring("(bitwise_not) TypeError: unsupported operand type"));
 }

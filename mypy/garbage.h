@@ -57,7 +57,7 @@ void tp_reset(TP)
     tp->black = tmp;
 }
 
-void tp_gc_init(TP)
+void gc_vm_init(TP)
 {
     tp->white = new_list(tp);
     tp->grey = new_list(tp);
@@ -104,7 +104,7 @@ void tp_delete(TP, ObjType v)
         tp_free(tp, v.fnc.info);
         return;
     }
-    tp_raise(, tp_string("(tp_delete) TypeError: ?"));
+    tp_raise(, mkstring("(tp_delete) TypeError: ?"));
 }
 
 void tp_collect(TP)

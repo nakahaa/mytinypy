@@ -15,13 +15,14 @@ void compile_code(TP);
 ObjType NONE = {NONETYPE};
 
 #if TP_COMPILER
-#include "bc.c"
+#include "tmp.h"
+
 void compile_code(TP)
 {
-    importCall(tp, 0, "tokenize", tp_tokenize, sizeof(tp_tokenize));
-    importCall(tp, 0, "parse", tp_parse, sizeof(tp_parse));
-    importCall(tp, 0, "encode", tp_encode, sizeof(tp_encode));
-    importCall(tp, 0, "py2bc", tp_py2bc, sizeof(tp_py2bc));
+    importCall(tp, 0, "tokenize", tokenize, sizeof(tokenize));
+    importCall(tp, 0, "parse", parse, sizeof(parse));
+    importCall(tp, 0, "encode", encode, sizeof(encode));
+    importCall(tp, 0, "py2bc", py2bc, sizeof(py2bc));
     ezCall(tp, "py2bc", "_init", NONE);
 }
 #else

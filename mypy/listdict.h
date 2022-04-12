@@ -42,7 +42,7 @@ int tp_hash(TP, ObjType v)
     case DATATYPE:
         return tp_lua_hash(&v.data.val, sizeof(void *));
     }
-    tp_raise(0, tp_string("(tp_hash) TypeError: value unhashable"));
+    tp_raise(0, mkstring("(tp_hash) TypeError: value unhashable"));
 }
 
 void _tp_dict_hash_set(TP, _dict *self, int hash, ObjType k, ObjType v)
@@ -68,7 +68,7 @@ void _tp_dict_hash_set(TP, _dict *self, int hash, ObjType k, ObjType v)
         self->len += 1;
         return;
     }
-    tp_raise(, tp_string("(_tp_dict_hash_set) RuntimeError: ?"));
+    tp_raise(, mkstring("(_tp_dict_hash_set) RuntimeError: ?"));
 }
 
 void _tp_dict_tp_realloc(TP, _dict *self, int len)
@@ -159,7 +159,7 @@ ObjType _tp_dict_get(TP, _dict *self, ObjType k, const char *error)
     int n = _tp_dict_find(tp, self, k);
     if (n < 0)
     {
-        tp_raise(NONE, tp_add(tp, tp_string("(_tp_dict_get) KeyError: "), tp_str(tp, k)));
+        tp_raise(NONE, add(tp, mkstring("(_tp_dict_get) KeyError: "), tp_str(tp, k)));
     }
     return self->items[n].val;
 }
@@ -169,7 +169,7 @@ void _tp_dict_del(TP, _dict *self, ObjType k, const char *error)
     int n = _tp_dict_find(tp, self, k);
     if (n < 0)
     {
-        tp_raise(, tp_add(tp, tp_string("(_tp_dict_del) KeyError: "), tp_str(tp, k)));
+        tp_raise(, add(tp, mkstring("(_tp_dict_del) KeyError: "), tp_str(tp, k)));
     }
     self->items[n].used = -1;
     self->len -= 1;
@@ -198,7 +198,7 @@ int _tp_dict_next(TP, _dict *self)
 {
     if (!self->len)
     {
-        tp_raise(0, tp_string("(_tp_dict_next) RuntimeError"));
+        tp_raise(0, mkstring("(_tp_dict_next) RuntimeError"));
     }
     while (1)
     {
@@ -232,13 +232,13 @@ ObjType tp_dict(TP)
     return tp ? tp_track(tp, r) : r;
 }
 
-ObjType tp_dict_n(TP, int n, ObjType *argv)
+ObjType dict_n(TP, int n, ObjType *argv)
 {
     ObjType r = tp_dict(tp);
     int i;
     for (i = 0; i < n; i++)
     {
-        tp_set(tp, r, argv[i * 2], argv[i * 2 + 1]);
+        set(tp, r, argv[i * 2], argv[i * 2 + 1]);
     }
     return r;
 }
@@ -257,7 +257,7 @@ void set_list(TP, _list *self, int k, ObjType v, const char *error)
 {
     if (k >= self->len)
     {
-        tp_raise(, tp_string("(set_list) KeyError"));
+        tp_raise(, mkstring("(set_list) KeyError"));
     }
     self->items[k] = v;
     tp_grey(tp, v);
@@ -272,7 +272,7 @@ ObjType get_list(TP, _list *self, int k, const char *error)
 {
     if (k >= self->len)
     {
-        tp_raise(NONE, tp_string("(set_list) KeyError"));
+        tp_raise(NONE, mkstring("(set_list) KeyError"));
     }
     return self->items[k];
 }
@@ -333,9 +333,9 @@ ObjType index_list(TP)
     int i = find_list(tp, self.list.val, v);
     if (i < 0)
     {
-        tp_raise(NONE, tp_string("(index_list) ValueError: list.index(x): x not in list"));
+        tp_raise(NONE, mkstring("(index_list) ValueError: list.index(x): x not in list"));
     }
-    return tp_number(i);
+    return number(i);
 }
 
 _list *new_list(TP)
@@ -405,7 +405,7 @@ ObjType to_list(TP)
     return tp_track(tp, r);
 }
 
-ObjType to_list_n(TP, int n, ObjType *argv)
+ObjType list_n(TP, int n, ObjType *argv)
 {
     int i;
     ObjType r = to_list(tp);

@@ -1,4 +1,4 @@
-unsigned char tp_tokenize[] = {
+unsigned char tokenize[] = {
     44,
     67,
     0,
@@ -7432,7 +7432,7 @@ unsigned char tp_tokenize[] = {
     0,
     0,
 };
-unsigned char tp_parse[] = {
+unsigned char parse[] = {
     44,
     114,
     0,
@@ -24914,7 +24914,7 @@ unsigned char tp_parse[] = {
     0,
     0,
 };
-unsigned char tp_encode[] = {
+unsigned char encode[] = {
     44,
     104,
     0,
@@ -56180,7 +56180,7 @@ unsigned char tp_encode[] = {
     0,
     0,
 };
-unsigned char tp_py2bc[] = {
+unsigned char py2bc[] = {
     44,
     11,
     0,

@@ -16,39 +16,39 @@ VmType *_vm_init(void)
     {
         tp->chars[i][0] = i;
     }
-    tp_gc_init(tp);
+    gc_vm_init(tp);
     tp->_regs = to_list(tp);
     for (i = 0; i < TP_REGS; i++)
     {
-        tp_set(tp, tp->_regs, NONE, NONE);
+        set(tp, tp->_regs, NONE, NONE);
     }
     tp->builtins = tp_dict(tp);
     tp->modules = tp_dict(tp);
     tp->_params = to_list(tp);
     for (i = 0; i < TP_FRAMES; i++)
     {
-        tp_set(tp, tp->_params, NONE, to_list(tp));
+        set(tp, tp->_params, NONE, to_list(tp));
     }
-    tp_set(tp, tp->root, NONE, tp->builtins);
-    tp_set(tp, tp->root, NONE, tp->modules);
-    tp_set(tp, tp->root, NONE, tp->_regs);
-    tp_set(tp, tp->root, NONE, tp->_params);
-    tp_set(tp, tp->builtins, tp_string("MODULES"), tp->modules);
-    tp_set(tp, tp->modules, tp_string("BUILTINS"), tp->builtins);
-    tp_set(tp, tp->builtins, tp_string("BUILTINS"), tp->builtins);
+    set(tp, tp->root, NONE, tp->builtins);
+    set(tp, tp->root, NONE, tp->modules);
+    set(tp, tp->root, NONE, tp->_regs);
+    set(tp, tp->root, NONE, tp->_params);
+    set(tp, tp->builtins, mkstring("MODULES"), tp->modules);
+    set(tp, tp->modules, mkstring("BUILTINS"), tp->builtins);
+    set(tp, tp->builtins, mkstring("BUILTINS"), tp->builtins);
     ObjType sys = tp_dict(tp);
-    tp_set(tp, sys, tp_string("version"), tp_string("tinypy 1.2+SVN"));
-    tp_set(tp, tp->modules, tp_string("sys"), sys);
+    set(tp, sys, mkstring("version"), mkstring("tinypy 1.2+SVN"));
+    set(tp, tp->modules, mkstring("sys"), sys);
     tp->regs = tp->_regs.list.val->items;
     tp_full(tp);
     return tp;
 }
 
-void tp_deinit(TP)
+void deinit(TP)
 {
     while (tp->root.list.val->len)
     {
-        pop_list(tp, tp->root.list.val, 0, "tp_deinit");
+        pop_list(tp, tp->root.list.val, 0, "deinit");
     }
     tp_full(tp);
     tp_full(tp);
@@ -58,7 +58,7 @@ void tp_deinit(TP)
     free(tp);
 }
 
-void tp_frame(TP, ObjType globals, ObjType code, ObjType *ret_dest)
+void frame(TP, ObjType globals, ObjType code, ObjType *ret_dest)
 {
     FrameType f;
     f.globals = globals;
@@ -73,19 +73,19 @@ void tp_frame(TP, ObjType globals, ObjType code, ObjType *ret_dest)
 
     f.ret_dest = ret_dest;
     f.lineno = 0;
-    f.line = tp_string("");
-    f.name = tp_string("?");
-    f.fname = tp_string("?");
+    f.line = mkstring("");
+    f.name = mkstring("?");
+    f.fname = mkstring("?");
     f.cregs = 0;
     if (f.regs + (256 + TP_REGS_EXTRA) >= tp->regs + TP_REGS || tp->cur >= TP_FRAMES - 1)
     {
-        tp_raise(, tp_string("(tp_frame) RuntimeError: stack overflow"));
+        tp_raise(, mkstring("(frame) RuntimeError: stack overflow"));
     }
     tp->cur += 1;
     tp->frames[tp->cur] = f;
 }
 
-void _tp_raise(TP, ObjType e)
+void raise(TP, ObjType e)
 {
     if (!tp || !tp->jmp)
     {
@@ -107,7 +107,7 @@ void _tp_raise(TP, ObjType e)
     longjmp(tp->buf, 1);
 }
 
-void tp_print_stack(TP)
+void print_stack(TP)
 {
     int i;
     printf("\n");
@@ -131,7 +131,7 @@ void tp_print_stack(TP)
     printf("\n");
 }
 
-void tp_handle(TP)
+void handle(TP)
 {
     int i;
     for (i = tp->cur; i >= 0; i--)
@@ -149,14 +149,14 @@ void tp_handle(TP)
         return;
     }
 #ifndef CPYTHON_MOD
-    tp_print_stack(tp);
+    print_stack(tp);
     exit(-1);
 #else
     longjmp(tp->nextexpr, 1);
 #endif
 }
 
-ObjType tp_call(TP, ObjType self, ObjType params)
+ObjType callfunc(TP, ObjType self, ObjType params)
 {
     tp->params = params;
 
@@ -165,16 +165,16 @@ ObjType tp_call(TP, ObjType self, ObjType params)
         if (self.dict.dtype == 1)
         {
             ObjType meta;
-            if (lookupFunc(tp, self, tp_string("__new__"), &meta))
+            if (lookupFunc(tp, self, mkstring("__new__"), &meta))
             {
                 insert_list(tp, params.list.val, 0, self);
-                return tp_call(tp, meta, params);
+                return callfunc(tp, meta, params);
             }
         }
         else if (self.dict.dtype == 2)
         {
             TP_META_BEGIN(self, "__call__");
-            return tp_call(tp, meta, params);
+            return callfunc(tp, meta, params);
             TP_META_END;
         }
     }
@@ -187,7 +187,7 @@ ObjType tp_call(TP, ObjType self, ObjType params)
     if (self.type == FUNCTYPE)
     {
         ObjType dest = NONE;
-        tp_frame(tp, self.fnc.info->globals, self.fnc.info->code, &dest);
+        frame(tp, self.fnc.info->globals, self.fnc.info->code, &dest);
         if ((self.fnc.ftype & 2))
         {
             tp->frames[tp->cur].regs[0] = params;
@@ -197,15 +197,15 @@ ObjType tp_call(TP, ObjType self, ObjType params)
         {
             tp->frames[tp->cur].regs[0] = params;
         }
-        tp_run(tp, tp->cur);
+        runFunc(tp, tp->cur);
         return dest;
     }
     tp_params_v(tp, 1, self);
     printFunc(tp);
-    tp_raise(NONE, tp_string("(tp_call) TypeError: object is not callable"));
+    tp_raise(NONE, mkstring("(callfunc) TypeError: object is not callable"));
 }
 
-void tp_return(TP, ObjType v)
+void returnFunc(TP, ObjType v)
 {
     ObjType *dest = tp->frames[tp->cur].ret_dest;
     if (dest)
@@ -284,7 +284,7 @@ enum
     f->cur = cur; \
     return (v);
 
-int tp_step(TP)
+int stepFunc(TP)
 {
     FrameType *f = &tp->frames[tp->cur];
     ObjType *regs = f->regs;
@@ -299,11 +299,11 @@ int tp_step(TP)
         switch (e.i)
         {
         case TP_IEOF:
-            tp_return(tp, NONE);
+            returnFunc(tp, NONE);
             SR(0);
             break;
         case TP_IADD:
-            RA = tp_add(tp, RB, RC);
+            RA = add(tp, RB, RC);
             break;
         case TP_ISUB:
             RA = tp_sub(tp, RB, RC);
@@ -336,46 +336,46 @@ int tp_step(TP)
             RA = tp_rsh(tp, RB, RC);
             break;
         case TP_ICMP:
-            RA = tp_number(compare(tp, RB, RC));
+            RA = number(compare(tp, RB, RC));
             break;
         case TP_INE:
-            RA = tp_number(compare(tp, RB, RC) != 0);
+            RA = number(compare(tp, RB, RC) != 0);
             break;
         case TP_IEQ:
-            RA = tp_number(compare(tp, RB, RC) == 0);
+            RA = number(compare(tp, RB, RC) == 0);
             break;
         case TP_ILE:
-            RA = tp_number(compare(tp, RB, RC) <= 0);
+            RA = number(compare(tp, RB, RC) <= 0);
             break;
         case TP_ILT:
-            RA = tp_number(compare(tp, RB, RC) < 0);
+            RA = number(compare(tp, RB, RC) < 0);
             break;
         case TP_IBITNOT:
-            RA = tp_bitwise_not(tp, RB);
+            RA = bitwise_not(tp, RB);
             break;
         case TP_INOT:
-            RA = tp_number(!tp_bool(tp, RB));
+            RA = number(!mk_bool(tp, RB));
             break;
         case TP_IPASS:
             break;
         case TP_IIF:
-            if (tp_bool(tp, RA))
+            if (mk_bool(tp, RA))
             {
                 cur += 1;
             }
             break;
         case TP_IIFN:
-            if (!tp_bool(tp, RA))
+            if (!mk_bool(tp, RA))
             {
                 cur += 1;
             }
             break;
         case TP_IGET:
-            RA = tp_get(tp, RB, RC);
+            RA = get(tp, RB, RC);
             GA;
             break;
         case TP_IITER:
-            if (RC.number.val < tp_len(tp, RB).number.val)
+            if (RC.number.val < len_func(tp, RB).number.val)
             {
                 RA = tp_iter(tp, RB, RC);
                 GA;
@@ -387,16 +387,16 @@ int tp_step(TP)
             }
             break;
         case TP_IHAS:
-            RA = tp_has(tp, RB, RC);
+            RA = has(tp, RB, RC);
             break;
         case TP_IIGET:
-            tp_iget(tp, &RA, RB, RC);
+            iget(tp, &RA, RB, RC);
             break;
         case TP_ISET:
-            tp_set(tp, RA, RB, RC);
+            set(tp, RA, RB, RC);
             break;
         case TP_IDEL:
-            tp_del(tp, RA, RB);
+            del(tp, RA, RB);
             break;
         case TP_IMOVE:
             RA = RB;
@@ -405,7 +405,7 @@ int tp_step(TP)
 #ifdef TP_SANDBOX
             tp_bounds(tp, cur, sizeof(tp_num) / 4);
 #endif
-            RA = tp_number(*(tp_num *)(*++cur).string.val);
+            RA = number(*(tp_num *)(*++cur).string.val);
             cur += sizeof(tp_num) / 4;
             continue;
         case TP_ISTRING:
@@ -420,16 +420,16 @@ int tp_step(TP)
         }
         break;
         case TP_IDICT:
-            RA = tp_dict_n(tp, VC / 2, &RB);
+            RA = dict_n(tp, VC / 2, &RB);
             break;
         case TP_ILIST:
-            RA = to_list_n(tp, VC, &RB);
+            RA = list_n(tp, VC, &RB);
             break;
         case TP_IPARAMS:
-            RA = tp_params_n(tp, VC, &RB);
+            RA = params_n(tp, VC, &RB);
             break;
         case TP_ILEN:
-            RA = tp_len(tp, RB);
+            RA = len_func(tp, RB);
             break;
         case TP_IJUMP:
             cur += SVBC;
@@ -443,19 +443,19 @@ int tp_step(TP)
             tp_bounds(tp, cur, 1);
 #endif
             f->cur = cur + 1;
-            RA = tp_call(tp, RB, RC);
+            RA = callfunc(tp, RB, RC);
             GA;
             return 0;
             break;
         case TP_IGGET:
-            if (!tp_iget(tp, &RA, f->globals, RB))
+            if (!iget(tp, &RA, f->globals, RB))
             {
-                RA = tp_get(tp, tp->builtins, RB);
+                RA = get(tp, tp->builtins, RB);
                 GA;
             }
             break;
         case TP_IGSET:
-            tp_set(tp, f->globals, RA, RB);
+            set(tp, f->globals, RA, RB);
             break;
         case TP_IDEF:
         {
@@ -473,15 +473,15 @@ int tp_step(TP)
         break;
 
         case TP_IRETURN:
-            tp_return(tp, RA);
+            returnFunc(tp, RA);
             SR(0);
             break;
         case TP_IRAISE:
-            _tp_raise(tp, RA);
+            raise(tp, RA);
             SR(0);
             break;
         case TP_IDEBUG:
-            tp_params_v(tp, 3, tp_string("DEBUG:"), tp_number(VA), RA);
+            tp_params_v(tp, 3, mkstring("DEBUG:"), number(VA), RA);
             printFunc(tp);
             break;
         case TP_INONE:
@@ -507,7 +507,7 @@ int tp_step(TP)
             f->cregs = VA;
             break;
         default:
-            tp_raise(0, tp_string("(tp_step) RuntimeError: invalid instruction"));
+            tp_raise(0, mkstring("(stepFunc) RuntimeError: invalid instruction"));
             break;
         }
 #ifdef TP_SANDBOX
@@ -520,39 +520,39 @@ int tp_step(TP)
     SR(0);
 }
 
-void _tp_run(TP, int cur)
+void _run(TP, int cur)
 {
     tp->jmp += 1;
     if (setjmp(tp->buf))
     {
-        tp_handle(tp);
+        handle(tp);
     }
-    while (tp->cur >= cur && tp_step(tp) != -1)
+    while (tp->cur >= cur && stepFunc(tp) != -1)
         ;
     tp->jmp -= 1;
 }
 
-void tp_run(TP, int cur)
+void runFunc(TP, int cur)
 {
     jmp_buf tmp;
     memcpy(tmp, tp->buf, sizeof(jmp_buf));
-    _tp_run(tp, cur);
+    _run(tp, cur);
     memcpy(tp->buf, tmp, sizeof(jmp_buf));
 }
 
 ObjType ezCall(TP, const char *mod, const char *fnc, ObjType params)
 {
     ObjType tmp;
-    tmp = tp_get(tp, tp->modules, tp_string(mod));
-    tmp = tp_get(tp, tmp, tp_string(fnc));
-    return tp_call(tp, tmp, params);
+    tmp = get(tp, tp->modules, mkstring(mod));
+    tmp = get(tp, tmp, mkstring(fnc));
+    return callfunc(tp, tmp, params);
 }
 
-ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code)
+ObjType import(TP, ObjType fname, ObjType name, ObjType code)
 {
     ObjType g;
 
-    if (!((fname.type != NONETYPE && _str_ind_(fname, tp_string(".tpc")) != -1) || code.type != NONETYPE))
+    if (!((fname.type != NONETYPE && _str_ind_(fname, mkstring(".tpc")) != -1) || code.type != NONETYPE))
     {
         return ezCall(tp, "py2bc", "import_fname", tp_params_v(tp, 2, fname, name));
     }
@@ -564,15 +564,15 @@ ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code)
     }
 
     g = tp_dict(tp);
-    tp_set(tp, g, tp_string("__name__"), name);
-    tp_set(tp, g, tp_string("__code__"), code);
-    tp_set(tp, g, tp_string("__dict__"), g);
-    tp_frame(tp, g, code, 0);
-    tp_set(tp, tp->modules, name, g);
+    set(tp, g, mkstring("__name__"), name);
+    set(tp, g, mkstring("__code__"), code);
+    set(tp, g, mkstring("__dict__"), g);
+    frame(tp, g, code, 0);
+    set(tp, tp->modules, name, g);
 
     if (!tp->jmp)
     {
-        tp_run(tp, tp->cur);
+        runFunc(tp, tp->cur);
     }
 
     return g;
@@ -580,9 +580,9 @@ ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code)
 
 ObjType importCall(TP, const char *fname, const char *name, void *codes, int len)
 {
-    ObjType f = fname ? tp_string(fname) : NONE;
+    ObjType f = fname ? mkstring(fname) : NONE;
     ObjType bc = codes ? tp_string_n((const char *)codes, len) : NONE;
-    return _tp_import(tp, f, tp_string(name), bc);
+    return import(tp, f, mkstring(name), bc);
 }
 
 ObjType tp_exec_(TP)
@@ -590,8 +590,8 @@ ObjType tp_exec_(TP)
     ObjType code = TP_OBJ();
     ObjType globals = TP_OBJ();
     ObjType r = NONE;
-    tp_frame(tp, globals, code, &r);
-    tp_run(tp, tp->cur);
+    frame(tp, globals, code, &r);
+    runFunc(tp, tp->cur);
     return r;
 }
 
@@ -600,12 +600,12 @@ ObjType tp_import_(TP)
     ObjType mod = TP_OBJ();
     ObjType r;
 
-    if (tp_has(tp, tp->modules, mod).number.val)
+    if (has(tp, tp->modules, mod).number.val)
     {
-        return tp_get(tp, tp->modules, mod);
+        return get(tp, tp->modules, mod);
     }
 
-    r = _tp_import(tp, tp_add(tp, mod, tp_string(".tpc")), mod, NONE);
+    r = import(tp, add(tp, mod, mkstring(".tpc")), mod, NONE);
     return r;
 }
 
@@ -655,13 +655,13 @@ void tp_builtins(TP)
     int i;
     for (i = 0; b[i].s; i++)
     {
-        tp_set(tp, tp->builtins, tp_string(b[i].s), tp_fnc(tp, (ObjType(*)(VmType *))b[i].f));
+        set(tp, tp->builtins, mkstring(b[i].s), tp_fnc(tp, (ObjType(*)(VmType *))b[i].f));
     }
 
     o = objectFunc(tp);
-    tp_set(tp, o, tp_string("__call__"), tp_fnc(tp, objectCallFunc));
-    tp_set(tp, o, tp_string("__new__"), tp_fnc(tp, newObjFunc));
-    tp_set(tp, tp->builtins, tp_string("object"), o);
+    set(tp, o, mkstring("__call__"), tp_fnc(tp, objectCallFunc));
+    set(tp, o, mkstring("__new__"), tp_fnc(tp, newObjFunc));
+    set(tp, tp->builtins, mkstring("object"), o);
 }
 
 void tp_args(TP, int argc, char *argv[])
@@ -670,9 +670,9 @@ void tp_args(TP, int argc, char *argv[])
     int i;
     for (i = 1; i < argc; i++)
     {
-        append_list(tp, self.list.val, tp_string(argv[i]));
+        append_list(tp, self.list.val, mkstring(argv[i]));
     }
-    tp_set(tp, tp->builtins, tp_string("ARGV"), self);
+    set(tp, tp->builtins, mkstring("ARGV"), self);
 }
 
 ObjType tp_main(TP, char *fname, void *code, int len)
@@ -688,14 +688,14 @@ ObjType tp_compile(TP, ObjType text, ObjType fname)
 ObjType tp_exec(TP, ObjType code, ObjType globals)
 {
     ObjType r = NONE;
-    tp_frame(tp, globals, code, &r);
-    tp_run(tp, tp->cur);
+    frame(tp, globals, code, &r);
+    runFunc(tp, tp->cur);
     return r;
 }
 
 ObjType tp_eval(TP, const char *text, ObjType globals)
 {
-    ObjType code = tp_compile(tp, tp_string(text), tp_string("<eval>"));
+    ObjType code = tp_compile(tp, mkstring(text), mkstring("<eval>"));
     return tp_exec(tp, code, globals);
 }
 

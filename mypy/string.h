@@ -110,7 +110,7 @@ ObjType _find(TP)
 {
     ObjType s = TP_OBJ();
     ObjType v = TP_OBJ();
-    return tp_number(_str_ind_(s, v));
+    return number(_str_ind_(s, v));
 }
 
 ObjType _str_index(TP)
@@ -120,9 +120,9 @@ ObjType _str_index(TP)
     int n = _str_ind_(s, v);
     if (n >= 0)
     {
-        return tp_number(n);
+        return number(n);
     }
-    tp_raise(NONE, tp_string("(_str_index) ValueError: substring not found"));
+    tp_raise(NONE, mkstring("(_str_index) ValueError: substring not found"));
 }
 
 ObjType tp_str2(TP)
@@ -141,9 +141,9 @@ ObjType tp_ord(TP)
     ObjType s = TP_STR();
     if (s.string.len != 1)
     {
-        tp_raise(NONE, tp_string("(tp_ord) TypeError: ord() expected a character"));
+        tp_raise(NONE, mkstring("(tp_ord) TypeError: ord() expected a character"));
     }
-    return tp_number((unsigned char)s.string.val[0]);
+    return number((unsigned char)s.string.val[0]);
 }
 
 ObjType tp_strip(TP)
@@ -165,7 +165,7 @@ ObjType tp_strip(TP)
     }
     if ((b - a) < 0)
     {
-        return tp_string("");
+        return mkstring("");
     }
     r = to_string(tp, b - a);
     s = r.string.info->s;

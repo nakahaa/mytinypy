@@ -61,13 +61,13 @@ ObjType copyFunc(TP)
     {
         return _tp_dict_copy(tp, r);
     }
-    tp_raise(NONE, tp_string("(copyFunc) TypeError: ?"));
+    tp_raise(NONE, mkstring("(copyFunc) TypeError: ?"));
 }
 
 ObjType lenFunc(TP)
 {
     ObjType e = TP_OBJ();
-    return tp_len(tp, e);
+    return len_func(tp, e);
 }
 
 ObjType assertFunc(TP)
@@ -77,7 +77,7 @@ ObjType assertFunc(TP)
     {
         return NONE;
     }
-    tp_raise(NONE, tp_string("(assertFunc) AssertionError"));
+    tp_raise(NONE, mkstring("(assertFunc) AssertionError"));
 }
 
 ObjType rangeFunc(TP)
@@ -95,7 +95,7 @@ ObjType rangeFunc(TP)
     case 3:
         a = TP_NUM();
         b = TP_NUM();
-        c = TP_DEFAULT(tp_number(1)).number.val;
+        c = TP_DEFAULT(number(1)).number.val;
         break;
     default:
         return r;
@@ -104,7 +104,7 @@ ObjType rangeFunc(TP)
     {
         for (i = a; (c > 0) ? i < b : i > b; i += c)
         {
-            append_list(tp, r.list.val, tp_number(i));
+            append_list(tp, r.list.val, number(i));
         }
     }
     return r;
@@ -115,44 +115,44 @@ ObjType sysFunc(TP)
     char s[TP_CSTR_LEN];
     tp_cstr(tp, TP_STR(), s, TP_CSTR_LEN);
     int r = system(s);
-    return tp_number(r);
+    return number(r);
 }
 
 ObjType isTypeFunc(TP)
 {
     ObjType v = TP_OBJ();
     ObjType t = TP_STR();
-    if (compare(tp, t, tp_string("string")) == 0)
+    if (compare(tp, t, mkstring("string")) == 0)
     {
-        return tp_number(v.type == TP_STRING);
+        return number(v.type == TP_STRING);
     }
-    if (compare(tp, t, tp_string("list")) == 0)
+    if (compare(tp, t, mkstring("list")) == 0)
     {
-        return tp_number(v.type == LISTTYPE);
+        return number(v.type == LISTTYPE);
     }
-    if (compare(tp, t, tp_string("dict")) == 0)
+    if (compare(tp, t, mkstring("dict")) == 0)
     {
-        return tp_number(v.type == DICTTYPE);
+        return number(v.type == DICTTYPE);
     }
-    if (compare(tp, t, tp_string("number")) == 0)
+    if (compare(tp, t, mkstring("number")) == 0)
     {
-        return tp_number(v.type == TP_NUMBER);
+        return number(v.type == TP_NUMBER);
     }
-    if (compare(tp, t, tp_string("fnc")) == 0)
+    if (compare(tp, t, mkstring("fnc")) == 0)
     {
-        return tp_number(v.type == FUNCTYPE && (v.fnc.ftype & 2) == 0);
+        return number(v.type == FUNCTYPE && (v.fnc.ftype & 2) == 0);
     }
-    if (compare(tp, t, tp_string("method")) == 0)
+    if (compare(tp, t, mkstring("method")) == 0)
     {
-        return tp_number(v.type == FUNCTYPE && (v.fnc.ftype & 2) != 0);
+        return number(v.type == FUNCTYPE && (v.fnc.ftype & 2) != 0);
     }
-    tp_raise(NONE, tp_string("(is_type) TypeError: ?"));
+    tp_raise(NONE, mkstring("(is_type) TypeError: ?"));
 }
 
 ObjType tp_float(TP)
 {
     ObjType v = TP_OBJ();
-    int ord = TP_DEFAULT(tp_number(0)).number.val;
+    int ord = TP_DEFAULT(number(0)).number.val;
     int type = v.type;
     if (type == TP_NUMBER)
     {
@@ -165,11 +165,11 @@ ObjType tp_float(TP)
         memcpy(s, v.string.val, v.string.len);
         if (strchr(s, '.'))
         {
-            return tp_number(atof(s));
+            return number(atof(s));
         }
-        return (tp_number(strtol(s, 0, ord)));
+        return (number(strtol(s, 0, ord)));
     }
-    tp_raise(NONE, tp_string("(tp_float) TypeError: ?"));
+    tp_raise(NONE, mkstring("(tp_float) TypeError: ?"));
 }
 
 ObjType saveFunc(TP)
@@ -181,7 +181,7 @@ ObjType saveFunc(TP)
     f = fopen(fname, "wb");
     if (!f)
     {
-        tp_raise(NONE, tp_string("(saveFunc) IOError: ?"));
+        tp_raise(NONE, mkstring("(saveFunc) IOError: ?"));
     }
     fwrite(v.string.val, v.string.len, 1, f);
     fclose(f);
@@ -202,7 +202,7 @@ ObjType loadFunc(TP)
     f = fopen(fname, "rb");
     if (!f)
     {
-        tp_raise(NONE, tp_string("(loadFunc) IOError: ?"));
+        tp_raise(NONE, mkstring("(loadFunc) IOError: ?"));
     }
     r = to_string(tp, l);
     s = r.string.info->s;
@@ -221,11 +221,11 @@ ObjType fpackFunc(TP)
 
 ObjType absFunc(TP)
 {
-    return tp_number(fabs(tp_float(tp).number.val));
+    return number(fabs(tp_float(tp).number.val));
 }
 ObjType intFunc(TP)
 {
-    return tp_number((long)tp_float(tp).number.val);
+    return number((long)tp_float(tp).number.val);
 }
 tp_num roundfFunc(tp_num v)
 {
@@ -236,7 +236,7 @@ tp_num roundfFunc(tp_num v)
 }
 ObjType tp_round(TP)
 {
-    return tp_number(roundfFunc(tp_float(tp).number.val));
+    return number(roundfFunc(tp_float(tp).number.val));
 }
 
 ObjType existFunc(TP)
@@ -244,7 +244,7 @@ ObjType existFunc(TP)
     char fname[TP_CSTR_LEN];
     tp_cstr(tp, TP_STR(), fname, TP_CSTR_LEN);
     struct stat stbuf;
-    return tp_number(!stat(fname, &stbuf));
+    return number(!stat(fname, &stbuf));
 }
 
 ObjType mtimeFunc(TP)
@@ -254,9 +254,9 @@ ObjType mtimeFunc(TP)
     struct stat stbuf;
     if (!stat(fname, &stbuf))
     {
-        return tp_number(stbuf.st_mtime);
+        return number(stbuf.st_mtime);
     }
-    tp_raise(NONE, tp_string("(mtimeFunc) IOError: ?"));
+    tp_raise(NONE, mkstring("(mtimeFunc) IOError: ?"));
 }
 
 int _tp_lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
@@ -270,7 +270,7 @@ int _tp_lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
     depth--;
     if (!depth)
     {
-        tp_raise(0, tp_string("(tp_lookup) RuntimeError: maximum lookup depth exceeded"));
+        tp_raise(0, mkstring("(tp_lookup) RuntimeError: maximum lookup depth exceeded"));
     }
     if (self.dict.dtype && self.dict.val->meta.type == DICTTYPE && _tp_lookup_(tp, self.dict.val->meta, k, meta, depth))
     {
@@ -294,7 +294,7 @@ int lookupFunc(TP, ObjType self, ObjType k, ObjType *meta)
     if (self.dict.dtype == 2)                             \
     {                                                     \
         ObjType meta;                                     \
-        if (lookupFunc(tp, self, tp_string(name), &meta)) \
+        if (lookupFunc(tp, self, mkstring(name), &meta)) \
         {
 
 #define TP_META_END \
@@ -328,7 +328,7 @@ ObjType newObjFunc(TP)
     ObjType self = objectFunc(tp);
     self.dict.val->meta = klass;
     TP_META_BEGIN(self, "__init__");
-    tp_call(tp, meta, tp->params);
+    callfunc(tp, meta, tp->params);
     TP_META_END;
     return self;
 }
@@ -358,12 +358,12 @@ ObjType getrawFunc(TP)
 ObjType classFunc(TP)
 {
     ObjType klass = tp_dict(tp);
-    klass.dict.val->meta = tp_get(tp, tp->builtins, tp_string("object"));
+    klass.dict.val->meta = get(tp, tp->builtins, mkstring("object"));
     return klass;
 }
 
 ObjType boolFunc(TP)
 {
     ObjType v = TP_OBJ();
-    return (tp_number(tp_bool(tp, v)));
+    return (number(mk_bool(tp, v)));
 }

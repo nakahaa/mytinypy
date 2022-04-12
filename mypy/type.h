@@ -211,8 +211,8 @@ typedef struct _tp_data
     void (*free)(TP, ObjType);
 } _tp_data;
 
-#define tp_True tp_number(1)
-#define tp_False tp_number(0)
+#define tp_True number(1)
+#define tp_False number(0)
 
 extern ObjType NONE;
 
@@ -230,29 +230,29 @@ void tp_sandbox(TP, double, unsigned long);
 void tp_time_update(TP);
 void tp_mem_update(TP);
 
-void tp_run(TP, int cur);
-void tp_set(TP, ObjType, ObjType, ObjType);
-ObjType tp_get(TP, ObjType, ObjType);
-ObjType tp_has(TP, ObjType self, ObjType k);
-ObjType tp_len(TP, ObjType);
-void tp_del(TP, ObjType, ObjType);
+void runFunc(TP, int cur);
+void set(TP, ObjType, ObjType, ObjType);
+ObjType get(TP, ObjType, ObjType);
+ObjType has(TP, ObjType self, ObjType k);
+ObjType len_func(TP, ObjType);
+void del(TP, ObjType, ObjType);
 ObjType tp_str(TP, ObjType);
-int tp_bool(TP, ObjType);
+int mk_bool(TP, ObjType);
 int compare(TP, ObjType, ObjType);
-void _tp_raise(TP, ObjType);
+void raise(TP, ObjType);
 ObjType _printf(TP, char const *fmt, ...);
 ObjType tp_track(TP, ObjType);
 void tp_grey(TP, ObjType);
-ObjType tp_call(TP, ObjType fnc, ObjType params);
-ObjType tp_add(TP, ObjType a, ObjType b);
+ObjType callfunc(TP, ObjType fnc, ObjType params);
+ObjType add(TP, ObjType a, ObjType b);
 
 #define tp_raise(r, v)    \
     {                     \
-        _tp_raise(tp, v); \
+        raise(tp, v); \
         return r;         \
     }
 
-tp_inline static ObjType tp_string(char const *v)
+tp_inline static ObjType mkstring(char const *v)
 {
     ObjType val;
     StringType s = {TP_STRING, 0, v, 0};
@@ -267,22 +267,22 @@ tp_inline static void tp_cstr(TP, ObjType v, char *s, int l)
 {
     if (v.type != TP_STRING)
     {
-        tp_raise(, tp_string("(tp_cstr) TypeError: value not a string"));
+        tp_raise(, mkstring("(tp_cstr) TypeError: value not a string"));
     }
     if (v.string.len >= l)
     {
-        tp_raise(, tp_string("(tp_cstr) TypeError: value too long"));
+        tp_raise(, mkstring("(tp_cstr) TypeError: value too long"));
     }
     memset(s, 0, l);
     memcpy(s, v.string.val, v.string.len);
 }
 
-#define TP_OBJ() (tp_get(tp, tp->params, NONE))
+#define TP_OBJ() (get(tp, tp->params, NONE))
 tp_inline static ObjType tp_type(TP, int t, ObjType v)
 {
     if (v.type != t)
     {
-        tp_raise(NONE, tp_string("(tp_type) TypeError: unexpected type"));
+        tp_raise(NONE, mkstring("(tp_type) TypeError: unexpected type"));
     }
     return v;
 }
@@ -291,7 +291,7 @@ tp_inline static ObjType tp_type(TP, int t, ObjType v)
 #define TP_TYPE(t) tp_type(tp, t, TP_OBJ())
 #define TP_NUM() (TP_TYPE(TP_NUMBER).number.val)
 #define TP_STR() (TP_TYPE(TP_STRING))
-#define TP_DEFAULT(d) (tp->params.list.val->len ? tp_get(tp, tp->params, NONE) : (d))
+#define TP_DEFAULT(d) (tp->params.list.val->len ? get(tp, tp->params, NONE) : (d))
 
 #define TP_LOOP(e)                      \
     int __l = tp->params.list.val->len; \
@@ -309,7 +309,7 @@ tp_inline static int _tp_min(int a, int b)
 tp_inline static int _tp_max(int a, int b) { return (a > b ? a : b); }
 tp_inline static int _tp_sign(tp_num v) { return (v < 0 ? -1 : (v > 0 ? 1 : 0)); }
 
-tp_inline static ObjType tp_number(tp_num v)
+tp_inline static ObjType number(tp_num v)
 {
     ObjType val = {TP_NUMBER};
     val.number.val = v;
@@ -391,7 +391,7 @@ ObjType tp_params(TP)
     return r;
 }
 
-ObjType tp_params_n(TP, int n, ObjType argv[])
+ObjType params_n(TP, int n, ObjType argv[])
 {
     ObjType r = tp_params(tp);
     int i;
