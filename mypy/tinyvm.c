@@ -149,7 +149,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
         tp_run(tp,tp->cur);
         return dest;
     }
-    tp_params_v(tp,1,self); tp_print(tp);
+    tp_params_v(tp,1,self); printFunc(tp);
     tp_raise(NONE,tp_string("(tp_call) TypeError: object is not callable"));
 }
 
@@ -283,7 +283,7 @@ int tp_step(TP) {
         case TP_IRETURN: tp_return(tp,RA); SR(0); break;
         case TP_IRAISE: _tp_raise(tp,RA); SR(0); break;
         case TP_IDEBUG:
-            tp_params_v(tp,3,tp_string("DEBUG:"),tp_number(VA),RA); tp_print(tp);
+            tp_params_v(tp,3,tp_string("DEBUG:"),tp_number(VA),RA); printFunc(tp);
             break;
         case TP_INONE: RA = NONE; break;
         case TP_ILINE:
@@ -390,11 +390,11 @@ ObjType tp_import_(TP) {
 void tp_builtins(TP) {
     ObjType o;
     struct {const char *s;void *f;} b[] = {
-    {"print",tp_print}, {"range",tp_range}, {"min",tp_min},
-    {"max",tp_max}, {"bind",tp_bind}, {"copy",tp_copy},
-    {"import",tp_import_}, {"len",tp_len_}, {"assert",tp_assert},
-    {"str",tp_str2}, {"float",tp_float}, {"system",tp_system},
-    {"istype",tp_istype}, {"chr",tp_chr}, {"save",tp_save},
+    {"print",printFunc}, {"range",rangeFunc}, {"min",minFunc},
+    {"max",maxFunc}, {"bind",bindFunc}, {"copy",copyFunc},
+    {"import",tp_import_}, {"len",lenFunc}, {"assert",assertFunc},
+    {"str",tp_str2}, {"float",tp_float}, {"system",sysFunc},
+    {"istype",isTypeFunc}, {"chr",tp_chr}, {"save",tp_save},
     {"load",tp_load}, {"fpack",tp_fpack}, {"abs",tp_abs},
     {"int",tp_int}, {"exec",tp_exec_}, {"exists",tp_exists},
     {"mtime",tp_mtime}, {"number",tp_float}, {"round",tp_round},

@@ -94,7 +94,7 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
                 return tp_method(tp,self,extend);
             } else if (compare(tp,tp_string("*"),k) == 0) {
                 tp_params_v(tp,1,self);
-                r = tp_copy(tp);
+                r = copyFunc(tp);
                 self.list.val->len=0;
                 return r;
             }
@@ -198,7 +198,7 @@ ObjType tp_add(TP,ObjType a, ObjType b) {
     } else if (a.type == LISTTYPE && a.type == b.type) {
         ObjType r;
         tp_params_v(tp,1,a);
-        r = tp_copy(tp);
+        r = copyFunc(tp);
         tp_params_v(tp,2,r,b);
         extend(tp);
         return r;

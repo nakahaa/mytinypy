@@ -1,4 +1,4 @@
-ObjType tp_print(TP) {
+ObjType printFunc(TP) {
     int n = 0;
     ObjType e;
     TP_LOOP(e)
@@ -10,7 +10,7 @@ ObjType tp_print(TP) {
     return NONE;
 }
 
-ObjType tp_bind(TP) {
+ObjType bindFunc(TP) {
     ObjType r = TP_TYPE(FUNCTYPE);
     ObjType self = TP_OBJ();
     return tp_fnc_new(tp,
@@ -18,7 +18,7 @@ ObjType tp_bind(TP) {
         self,r.fnc.info->globals);
 }
 
-ObjType tp_min(TP) {
+ObjType minFunc(TP) {
     ObjType r = TP_OBJ();
     ObjType e;
     TP_LOOP(e)
@@ -27,7 +27,7 @@ ObjType tp_min(TP) {
     return r;
 }
 
-ObjType tp_max(TP) {
+ObjType maxFunc(TP) {
     ObjType r = TP_OBJ();
     ObjType e;
     TP_LOOP(e)
@@ -36,7 +36,7 @@ ObjType tp_max(TP) {
     return r;
 }
 
-ObjType tp_copy(TP) {
+ObjType copyFunc(TP) {
     ObjType r = TP_OBJ();
     int type = r.type;
     if (type == LISTTYPE) {
@@ -44,22 +44,22 @@ ObjType tp_copy(TP) {
     } else if (type == DICTTYPE) {
         return _tp_dict_copy(tp,r);
     }
-    tp_raise(NONE,tp_string("(tp_copy) TypeError: ?"));
+    tp_raise(NONE,tp_string("(copyFunc) TypeError: ?"));
 }
 
 
-ObjType tp_len_(TP) {
+ObjType lenFunc(TP) {
     ObjType e = TP_OBJ();
     return tp_len(tp,e);
 }
 
-ObjType tp_assert(TP) {
+ObjType assertFunc(TP) {
     int a = TP_NUM();
     if (a) { return NONE; }
-    tp_raise(NONE,tp_string("(tp_assert) AssertionError"));
+    tp_raise(NONE,tp_string("(assertFunc) AssertionError"));
 }
 
-ObjType tp_range(TP) {
+ObjType rangeFunc(TP) {
     int a,b,c,i;
     ObjType r = to_list(tp);
     switch (tp->params.list.val->len) {
@@ -76,13 +76,13 @@ ObjType tp_range(TP) {
     return r;
 }
 
-ObjType tp_system(TP) {
+ObjType sysFunc(TP) {
     char s[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),s,TP_CSTR_LEN);
     int r = system(s);
     return tp_number(r);
 }
 
-ObjType tp_istype(TP) {
+ObjType isTypeFunc(TP) {
     ObjType v = TP_OBJ();
     ObjType t = TP_STR();
     if (compare(tp,t,tp_string("string")) == 0) { return tp_number(v.type == TP_STRING); }
