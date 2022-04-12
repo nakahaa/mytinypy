@@ -4,20 +4,11 @@ import tokenize
 import parse
 import encode
 
-
-def _boot_init():
-    global FTYPE
-    f = open('type.h', 'r').read()
-    FTYPE = 'f'
-    if 'double tp_num' in f:
-        FTYPE = 'd'
-    import sys
-    global ARGV
-    ARGV = sys.argv
-
-
-_boot_init()
-
+global FTYPE
+f = open('type.h', 'r').read()
+FTYPE = 'f'
+if 'double tp_num' in f:
+    FTYPE = 'd'
 
 def merge(a, b):
     if isinstance(a, dict):
@@ -72,8 +63,8 @@ def save(fname, v):
 def _compile(s, fname):
     tokens = tokenize.tokenize(s)
     t = parse.parse(s, tokens)
-    r = encode.encode(fname, s, t)
-    return r
+    r, tmpCode = encode.encode(fname, s, t)
+    return r, tmpCode
 
 
 def _import(name):
@@ -84,7 +75,7 @@ def _import(name):
     if exists(py):
         if not exists(tpc) or mtime(py) > mtime(tpc):
             s = load(py)
-            code = _compile(s, py)
+            code, _ = _compile(s, py)
             save(tpc, code)
     if not exists(tpc):
         raise
@@ -106,9 +97,8 @@ def import_fname(fname, name):
     g['__name__'] = name
     MODULES[name] = g
     s = load(fname)
-    code = _compile(s, fname)
+    code, _ = _compile(s, fname)
     g['__code__'] = code
-    print(code)
     exec(code, g)
     return g
 
@@ -119,16 +109,18 @@ def tinypy():
 
 def main(src, dest):
     s = load(src)
-    r = _compile(s, src)
+    r, _ = _compile(s, src)
     save(dest, r)
 
+def genCode(src):
+    s = load(src)
+    _, genCodes = _compile(s, src)
+    for code in genCodes:
+        print( code )
 
 if __name__ == '__main__':
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
-    main(ARGV[1], ARGV[2])
+    if sys.argv[2] == "gencode":
+        genCode(sys.argv[1])
+
+    if sys.argv[2] == "dumpCode":
+        main(sys.argv[1], "tmpCode")

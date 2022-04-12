@@ -214,7 +214,10 @@ def map_tags():
     tags = {}
     out = []
     n = 0
+    tmpCode = []
     for item in D.out:
+        tmpCode.append(item)
+
         if item[0] == 'tag':
             tags[item[1]] = n
             continue
@@ -244,6 +247,7 @@ def map_tags():
         if len(out[n]) != 4:
             raise ('code '+str(n)+' is wrong length '+str(len(out[n])))
     D.out = out
+    return tmpCode
 
 
 def get_tmp(r=None):
@@ -874,7 +878,7 @@ def encode(fname, s, t):
     D.begin(True)
     do(t)
     D.end()
-    map_tags()
+    tmpCode = map_tags()
     out = D.out
     D = None
-    return ''.join(out)
+    return ''.join(out), tmpCode
