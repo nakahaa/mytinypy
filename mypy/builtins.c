@@ -7,7 +7,7 @@ ObjType tp_print(TP) {
         n += 1;
     TP_END;
     printf("\n");
-    return tp_None;
+    return NONE;
 }
 
 ObjType tp_bind(TP) {
@@ -44,7 +44,7 @@ ObjType tp_copy(TP) {
     } else if (type == DICTTYPE) {
         return _tp_dict_copy(tp,r);
     }
-    tp_raise(tp_None,tp_string("(tp_copy) TypeError: ?"));
+    tp_raise(NONE,tp_string("(tp_copy) TypeError: ?"));
 }
 
 
@@ -55,8 +55,8 @@ ObjType tp_len_(TP) {
 
 ObjType tp_assert(TP) {
     int a = TP_NUM();
-    if (a) { return tp_None; }
-    tp_raise(tp_None,tp_string("(tp_assert) AssertionError"));
+    if (a) { return NONE; }
+    tp_raise(NONE,tp_string("(tp_assert) AssertionError"));
 }
 
 ObjType tp_range(TP) {
@@ -91,7 +91,7 @@ ObjType tp_istype(TP) {
     if (compare(tp,t,tp_string("number")) == 0) { return tp_number(v.type == TP_NUMBER); }
     if (compare(tp,t,tp_string("fnc")) == 0) { return tp_number(v.type == FUNCTYPE && (v.fnc.ftype&2) == 0); }
     if (compare(tp,t,tp_string("method")) == 0) { return tp_number(v.type == FUNCTYPE && (v.fnc.ftype&2) != 0); }
-    tp_raise(tp_None,tp_string("(is_type) TypeError: ?"));
+    tp_raise(NONE,tp_string("(is_type) TypeError: ?"));
 }
 
 
@@ -106,7 +106,7 @@ ObjType tp_float(TP) {
         if (strchr(s,'.')) { return tp_number(atof(s)); }
         return(tp_number(strtol(s,0,ord)));
     }
-    tp_raise(tp_None,tp_string("(tp_float) TypeError: ?"));
+    tp_raise(NONE,tp_string("(tp_float) TypeError: ?"));
 }
 
 
@@ -115,10 +115,10 @@ ObjType tp_save(TP) {
     ObjType v = TP_OBJ();
     FILE *f;
     f = fopen(fname,"wb");
-    if (!f) { tp_raise(tp_None,tp_string("(tp_save) IOError: ?")); }
+    if (!f) { tp_raise(NONE,tp_string("(tp_save) IOError: ?")); }
     fwrite(v.string.val,v.string.len,1,f);
     fclose(f);
-    return tp_None;
+    return NONE;
 }
 
 ObjType tp_load(TP) {
@@ -132,7 +132,7 @@ ObjType tp_load(TP) {
     l = stbuf.st_size;
     f = fopen(fname,"rb");
     if (!f) {
-        tp_raise(tp_None,tp_string("(tp_load) IOError: ?"));
+        tp_raise(NONE,tp_string("(tp_load) IOError: ?"));
     }
     r = to_string(tp,l);
     s = r.string.info->s;
@@ -175,7 +175,7 @@ ObjType tp_mtime(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
     if (!stat(fname,&stbuf)) { return tp_number(stbuf.st_mtime); }
-    tp_raise(tp_None,tp_string("(tp_mtime) IOError: ?"));
+    tp_raise(NONE,tp_string("(tp_mtime) IOError: ?"));
 }
 
 int _tp_lookup_(TP,ObjType self, ObjType k, ObjType *meta, int depth) {
@@ -212,7 +212,7 @@ ObjType tp_setmeta(TP) {
     ObjType self = TP_TYPE(DICTTYPE);
     ObjType meta = TP_TYPE(DICTTYPE);
     self.dict.val->meta = meta;
-    return tp_None;
+    return NONE;
 }
 
 ObjType tp_getmeta(TP) {

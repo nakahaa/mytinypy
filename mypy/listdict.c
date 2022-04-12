@@ -99,7 +99,7 @@ void _tp_dict_set(TP,_dict *self,ObjType k, ObjType v) {
 ObjType _tp_dict_get(TP,_dict *self,ObjType k, const char *error) {
     int n = _tp_dict_find(tp,self,k);
     if (n < 0) {
-        tp_raise(NoneType,tp_add(tp,tp_string("(_tp_dict_get) KeyError: "),tp_str(tp,k)));
+        tp_raise(NONE,tp_add(tp,tp_string("(_tp_dict_get) KeyError: "),tp_str(tp,k)));
     }
     return self->items[n].val;
 }
@@ -149,7 +149,7 @@ ObjType tp_merge(TP) {
         _tp_dict_set(tp,self.dict.val,
             v.dict.val->items[n].key,v.dict.val->items[n].val);
     }
-    return NoneType;
+    return NONE;
 }
 
 ObjType tp_dict(TP) {
@@ -186,7 +186,7 @@ void free_list(TP, _list *self) {
 
 ObjType get_list(TP,_list *self,int k,const char *error) {
     if (k >= self->len) {
-        tp_raise(NoneType,tp_string("(set_list) KeyError"));
+        tp_raise(NONE,tp_string("(set_list) KeyError"));
     }
     return self->items[k];
 }
@@ -230,7 +230,7 @@ ObjType index_list(TP) {
     ObjType v = TP_OBJ();
     int i = find_list(tp,self.list.val,v);
     if (i < 0) {
-        tp_raise(NoneType,tp_string("(index_list) ValueError: list.index(x): x not in list"));
+        tp_raise(NONE,tp_string("(index_list) ValueError: list.index(x): x not in list"));
     }
     return tp_number(i);
 }
@@ -254,7 +254,7 @@ ObjType append(TP) {
     ObjType self = TP_OBJ();
     ObjType v = TP_OBJ();
     append_list(tp,self.list.val,v);
-    return NoneType;
+    return NONE;
 }
 
 ObjType pop(TP) {
@@ -267,7 +267,7 @@ ObjType insert(TP) {
     int n = TP_NUM();
     ObjType v = TP_OBJ();
     insert_list(tp,self.list.val,n,v);
-    return NoneType;
+    return NONE;
 }
 
 ObjType extend(TP) {
@@ -277,7 +277,7 @@ ObjType extend(TP) {
     for (i=0; i<v.list.val->len; i++) {
         append_list(tp,self.list.val,v.list.val->items[i]);
     }
-    return NoneType;
+    return NONE;
 }
 
 ObjType list_nt(TP) {
@@ -308,6 +308,6 @@ int sort_compare(ObjType *a,ObjType *b) {
 ObjType sort(TP) {
     ObjType self = TP_OBJ();
     qsort(self.list.val->items, self.list.val->len, sizeof(ObjType), (int(*)(const void*,const void*))sort_compare);
-    return NoneType;
+    return NONE;
 }
 

@@ -190,7 +190,7 @@ typedef struct _tp_data {
 #define tp_True tp_number(1)
 #define tp_False tp_number(0)
 
-extern ObjType tp_None;
+extern ObjType NONE;
 
 #ifdef TP_SANDBOX
 void *tp_malloc(TP, unsigned long);
@@ -251,9 +251,9 @@ tp_inline static void tp_cstr(TP,ObjType v, char *s, int l) {
 }
 
 
-#define TP_OBJ() (tp_get(tp,tp->params,tp_None))
+#define TP_OBJ() (tp_get(tp,tp->params,NONE))
 tp_inline static ObjType tp_type(TP,int t,ObjType v) {
-    if (v.type != t) { tp_raise(tp_None,tp_string("(tp_type) TypeError: unexpected type")); }
+    if (v.type != t) { tp_raise(NONE,tp_string("(tp_type) TypeError: unexpected type")); }
     return v;
 }
 
@@ -263,7 +263,7 @@ tp_inline static ObjType tp_type(TP,int t,ObjType v) {
 #define TP_TYPE(t) tp_type(tp,t,TP_OBJ())
 #define TP_NUM() (TP_TYPE(TP_NUMBER).number.val)
 #define TP_STR() (TP_TYPE(TP_STRING))
-#define TP_DEFAULT(d) (tp->params.list.val->len?tp_get(tp,tp->params,tp_None):(d))
+#define TP_DEFAULT(d) (tp->params.list.val->len?tp_get(tp,tp->params,NONE):(d))
 
 #define TP_LOOP(e) \
     int __l = tp->params.list.val->len; \
@@ -319,16 +319,16 @@ ObjType tp_fnc_new(TP,int t, void *v, ObjType c,ObjType s, ObjType g) {
 }
 
 ObjType tp_def(TP,ObjType code, ObjType g) {
-    ObjType r = tp_fnc_new(tp,1,0,code,tp_None,g);
+    ObjType r = tp_fnc_new(tp,1,0,code,NONE,g);
     return r;
 }
 
 ObjType tp_fnc(TP,ObjType v(TP)) {
-    return tp_fnc_new(tp,0,v,tp_None,tp_None,tp_None);
+    return tp_fnc_new(tp,0,v,NONE,NONE,NONE);
 }
 
 ObjType tp_method(TP,ObjType self,ObjType v(TP)) {
-    return tp_fnc_new(tp,2,v,tp_None,self,tp_None);
+    return tp_fnc_new(tp,2,v,NONE,self,NONE);
 }
 
 ObjType tp_data(TP,int magic,void *v) {

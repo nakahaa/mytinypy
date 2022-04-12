@@ -13,7 +13,7 @@
 void compile_code(TP);
 #include "vm.c"
 
-ObjType tp_None = {NONETYPE};
+ObjType NONE = {NONETYPE};
 
 #if TP_COMPILER
 #include "bc.c"
@@ -22,7 +22,7 @@ void compile_code(TP) {
     tp_import(tp,0,"parse",tp_parse,sizeof(tp_parse));
     tp_import(tp,0,"encode",tp_encode,sizeof(tp_encode));
     tp_import(tp,0,"py2bc",tp_py2bc,sizeof(tp_py2bc));
-    tp_ez_call(tp,"py2bc","_init",tp_None);
+    tp_ez_call(tp,"py2bc","_init",NONE);
 }
 #else
 void compile_code(TP) { }

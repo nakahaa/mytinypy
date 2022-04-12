@@ -42,7 +42,7 @@ ObjType tp_has(TP,ObjType self, ObjType k) {
     } else if (type == LISTTYPE) {
         return tp_number(find_list(tp,self.list.val,k)!=-1);
     }
-    tp_raise(tp_None,tp_string("(tp_has) TypeError: iterable argument required"));
+    tp_raise(NONE,tp_string("(tp_has) TypeError: iterable argument required"));
 }
 
 
@@ -62,7 +62,7 @@ ObjType tp_iter(TP,ObjType self, ObjType k) {
     if (type == DICTTYPE && k.type == TP_NUMBER) {
         return self.dict.val->items[_tp_dict_next(tp,self.dict.val)].key;
     }
-    tp_raise(tp_None,tp_string("(tp_iter) TypeError: iteration over non-sequence"));
+    tp_raise(NONE,tp_string("(tp_iter) TypeError: iteration over non-sequence"));
 }
 
 
@@ -129,11 +129,11 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
         tmp = tp_get(tp,k,tp_number(0));
         if (tmp.type == TP_NUMBER) { a = tmp.number.val; }
         else if(tmp.type == NONETYPE) { a = 0; }
-        else { tp_raise(tp_None,tp_string("(tp_get) TypeError: indices must be numbers")); }
+        else { tp_raise(NONE,tp_string("(tp_get) TypeError: indices must be numbers")); }
         tmp = tp_get(tp,k,tp_number(1));
         if (tmp.type == TP_NUMBER) { b = tmp.number.val; }
         else if(tmp.type == NONETYPE) { b = l; }
-        else { tp_raise(tp_None,tp_string("(tp_get) TypeError: indices must be numbers")); }
+        else { tp_raise(NONE,tp_string("(tp_get) TypeError: indices must be numbers")); }
         a = _tp_max(0,(a<0?l+a:a)); b = _tp_min(l,(b<0?l+b:b));
         if (type == LISTTYPE) {
             return to_list_n(tp,b-a,&self.list.val->items[a]);
@@ -142,7 +142,7 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
         }
     }
 
-    tp_raise(tp_None,tp_string("(tp_get) TypeError: ?"));
+    tp_raise(NONE,tp_string("(tp_get) TypeError: ?"));
 }
 
 int tp_iget(TP,ObjType *r, ObjType self, ObjType k) {
@@ -203,7 +203,7 @@ ObjType tp_add(TP,ObjType a, ObjType b) {
         extend(tp);
         return r;
     }
-    tp_raise(tp_None,tp_string("(tp_add) TypeError: ?"));
+    tp_raise(NONE,tp_string("(tp_add) TypeError: ?"));
 }
 
 ObjType tp_mul(TP,ObjType a, ObjType b) {
@@ -224,7 +224,7 @@ ObjType tp_mul(TP,ObjType a, ObjType b) {
         int i; for (i=0; i<n; i++) { memcpy(s+al*i,a.string.val,al); }
         return tp_track(tp,r);
     }
-    tp_raise(tp_None,tp_string("(tp_mul) TypeError: ?"));
+    tp_raise(NONE,tp_string("(tp_mul) TypeError: ?"));
 }
 
 ObjType tp_len(TP,ObjType self) {
@@ -237,7 +237,7 @@ ObjType tp_len(TP,ObjType self) {
         return tp_number(self.list.val->len);
     }
     
-    tp_raise(tp_None,tp_string("(tp_len) TypeError: len() of unsized object"));
+    tp_raise(NONE,tp_string("(tp_len) TypeError: len() of unsized object"));
 }
 
 int compare(TP,ObjType a, ObjType b) {
@@ -273,7 +273,7 @@ int compare(TP,ObjType a, ObjType b) {
         tp_num a = _a.number.val; tp_num b = _b.number.val; \
         return tp_number(expr); \
     } \
-    tp_raise(tp_None,tp_string("(" #name ") TypeError: unsupported operand type(s)")); \
+    tp_raise(NONE,tp_string("(" #name ") TypeError: unsupported operand type(s)")); \
 }
 
 TP_OP(tp_bitwise_and,((long)a)&((long)b));
@@ -290,6 +290,6 @@ ObjType tp_bitwise_not(TP, ObjType a) {
     if (a.type == TP_NUMBER) {
         return tp_number(~(long)a.number.val);
     }
-    tp_raise(tp_None,tp_string("(tp_bitwise_not) TypeError: unsupported operand type"));
+    tp_raise(NONE,tp_string("(tp_bitwise_not) TypeError: unsupported operand type"));
 }
 

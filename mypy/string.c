@@ -98,7 +98,7 @@ ObjType _str_index(TP) {
     ObjType v = TP_OBJ();
     int n = _str_ind_(s,v);
     if (n >= 0) { return tp_number(n); }
-    tp_raise(tp_None,tp_string("(_str_index) ValueError: substring not found"));
+    tp_raise(NONE,tp_string("(_str_index) ValueError: substring not found"));
 }
 
 ObjType tp_str2(TP) {
@@ -113,7 +113,7 @@ ObjType tp_chr(TP) {
 ObjType tp_ord(TP) {
     ObjType s = TP_STR();
     if (s.string.len != 1) {
-        tp_raise(tp_None,tp_string("(tp_ord) TypeError: ord() expected a character"));
+        tp_raise(NONE,tp_string("(tp_ord) TypeError: ord() expected a character"));
     }
     return tp_number((unsigned char)s.string.val[0]);
 }

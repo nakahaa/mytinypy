@@ -9,20 +9,20 @@ VmType *_vm_init(void) {
     tp->mem_used = sizeof(VmType);
     tp->cur = 0;
     tp->jmp = 0;
-    tp->ex = tp_None;
+    tp->ex = NONE;
     tp->root = list_nt(tp);
     for (i=0; i<256; i++) { tp->chars[i][0]=i; }
     tp_gc_init(tp);
     tp->_regs = to_list(tp);
-    for (i=0; i<TP_REGS; i++) { tp_set(tp,tp->_regs,tp_None,tp_None); }
+    for (i=0; i<TP_REGS; i++) { tp_set(tp,tp->_regs,NONE,NONE); }
     tp->builtins = tp_dict(tp);
     tp->modules = tp_dict(tp);
     tp->_params = to_list(tp);
-    for (i=0; i<TP_FRAMES; i++) { tp_set(tp,tp->_params,tp_None,to_list(tp)); }
-    tp_set(tp,tp->root,tp_None,tp->builtins);
-    tp_set(tp,tp->root,tp_None,tp->modules);
-    tp_set(tp,tp->root,tp_None,tp->_regs);
-    tp_set(tp,tp->root,tp_None,tp->_params);
+    for (i=0; i<TP_FRAMES; i++) { tp_set(tp,tp->_params,NONE,to_list(tp)); }
+    tp_set(tp,tp->root,NONE,tp->builtins);
+    tp_set(tp,tp->root,NONE,tp->modules);
+    tp_set(tp,tp->root,NONE,tp->_regs);
+    tp_set(tp,tp->root,NONE,tp->_params);
     tp_set(tp,tp->builtins,tp_string("MODULES"),tp->modules);
     tp_set(tp,tp->modules,tp_string("BUILTINS"),tp->builtins);
     tp_set(tp,tp->builtins,tp_string("BUILTINS"),tp->builtins);
@@ -138,7 +138,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
         return r;
     }
     if (self.type == FUNCTYPE) {
-        ObjType dest = tp_None;
+        ObjType dest = NONE;
         tp_frame(tp,self.fnc.info->globals,self.fnc.info->code,&dest);
         if ((self.fnc.ftype&2)) {
             tp->frames[tp->cur].regs[0] = params;
@@ -150,7 +150,7 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
         return dest;
     }
     tp_params_v(tp,1,self); tp_print(tp);
-    tp_raise(tp_None,tp_string("(tp_call) TypeError: object is not callable"));
+    tp_raise(NONE,tp_string("(tp_call) TypeError: object is not callable"));
 }
 
 
@@ -194,7 +194,7 @@ int tp_step(TP) {
     CodeType e = *cur;
 
     switch (e.i) {
-        case TP_IEOF: tp_return(tp,tp_None); SR(0); break;
+        case TP_IEOF: tp_return(tp,NONE); SR(0); break;
         case TP_IADD: RA = tp_add(tp,RB,RC); break;
         case TP_ISUB: RA = tp_sub(tp,RB,RC); break;
         case TP_IMUL: RA = tp_mul(tp,RB,RC); break;
@@ -285,7 +285,7 @@ int tp_step(TP) {
         case TP_IDEBUG:
             tp_params_v(tp,3,tp_string("DEBUG:"),tp_number(VA),RA); tp_print(tp);
             break;
-        case TP_INONE: RA = tp_None; break;
+        case TP_INONE: RA = NONE; break;
         case TP_ILINE:
             #ifdef TP_SANDBOX
             tp_bounds(tp,cur,VA);
@@ -358,8 +358,8 @@ ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code) {
 }
 
 ObjType tp_import(TP, const char * fname, const char * name, void *codes, int len) {
-    ObjType f = fname?tp_string(fname):tp_None;
-    ObjType bc = codes?tp_string_n((const char*)codes,len):tp_None;
+    ObjType f = fname?tp_string(fname):NONE;
+    ObjType bc = codes?tp_string_n((const char*)codes,len):NONE;
     return _tp_import(tp,f,tp_string(name),bc);
 }
 
@@ -368,7 +368,7 @@ ObjType tp_import(TP, const char * fname, const char * name, void *codes, int le
 ObjType tp_exec_(TP) {
     ObjType code = TP_OBJ();
     ObjType globals = TP_OBJ();
-    ObjType r = tp_None;
+    ObjType r = NONE;
     tp_frame(tp,globals,code,&r);
     tp_run(tp,tp->cur);
     return r;
@@ -383,7 +383,7 @@ ObjType tp_import_(TP) {
         return tp_get(tp,tp->modules,mod);
     }
     
-    r = _tp_import(tp,tp_add(tp,mod,tp_string(".tpc")),mod,tp_None);
+    r = _tp_import(tp,tp_add(tp,mod,tp_string(".tpc")),mod,NONE);
     return r;
 }
 
@@ -433,7 +433,7 @@ ObjType tp_compile(TP, ObjType text, ObjType fname) {
 }
 
 ObjType tp_exec(TP, ObjType code, ObjType globals) {
-    ObjType r=tp_None;
+    ObjType r=NONE;
     tp_frame(tp,globals,code,&r);
     tp_run(tp,tp->cur);
     return r;
