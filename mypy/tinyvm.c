@@ -1,4 +1,4 @@
-tp_vm *_tp_init(void) {
+tp_vm *_vm_init(void) {
     int i;
     tp_vm *tp = (tp_vm*)calloc(sizeof(tp_vm),1);
     tp->time_limit = TP_NO_LIMIT;
@@ -445,9 +445,9 @@ tp_obj tp_eval(TP, const char *text, tp_obj globals) {
 }
 
 tp_vm *tp_init(int argc, char *argv[]) {
-    tp_vm *tp = _tp_init();
+    tp_vm *tp = _vm_init();
     tp_builtins(tp);
     tp_args(tp,argc,argv);
-    tp_compiler(tp);
+    compile_code(tp);
     return tp;
 }
