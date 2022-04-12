@@ -1,29 +1,29 @@
-tp_obj to_string(TP, int n) {
-    tp_obj r = tp_string_n(0,n);
-    r.string.info = (_tp_string*)tp_malloc(tp, sizeof(_tp_string)+n);
+ObjType to_string(TP, int n) {
+    ObjType r = tp_string_n(0,n);
+    r.string.info = (_string*)tp_malloc(tp, sizeof(_string)+n);
     r.string.info->len = n;
     r.string.val = r.string.info->s;
     return r;
 }
 
-tp_obj str_cp(TP, const char *s, int n) {
-    tp_obj r = to_string(tp,n);
+ObjType str_cp(TP, const char *s, int n) {
+    ObjType r = to_string(tp,n);
     memcpy(r.string.info->s,s,n);
     return tp_track(tp,r);
 }
 
-tp_obj strsub(TP, tp_obj s, int a, int b) {
+ObjType strsub(TP, ObjType s, int a, int b) {
     int l = s.string.len;
     a = _tp_max(0,(a<0?l+a:a)); b = _tp_min(l,(b<0?l+b:b));
-    tp_obj r = s;
+    ObjType r = s;
     r.string.val += a;
     r.string.len = b-a;
     return r;
 }
 
-tp_obj _printf(TP, char const *fmt,...) {
+ObjType _printf(TP, char const *fmt,...) {
     int l;
-    tp_obj r;
+    ObjType r;
     char *s;
     va_list arg;
     va_start(arg, fmt);
@@ -37,7 +37,7 @@ tp_obj _printf(TP, char const *fmt,...) {
     return tp_track(tp,r);
 }
 
-int _str_ind_(tp_obj s, tp_obj k) {
+int _str_ind_(ObjType s, ObjType k) {
     int i=0;
     while ((s.string.len - i) >= k.string.len) {
         if (memcmp(s.string.val+i,k.string.val,k.string.len) == 0) {
@@ -48,11 +48,11 @@ int _str_ind_(tp_obj s, tp_obj k) {
     return -1;
 }
 
-tp_obj str_join(TP) {
-    tp_obj delim = TP_OBJ();
-    tp_obj val = TP_OBJ();
+ObjType str_join(TP) {
+    ObjType delim = TP_OBJ();
+    ObjType val = TP_OBJ();
     int l=0,i;
-    tp_obj r;
+    ObjType r;
     char *s;
     for (i=0; i<val.list.val->len; i++) {
         if (i!=0) { l += delim.string.len; }
@@ -62,7 +62,7 @@ tp_obj str_join(TP) {
     s = r.string.info->s;
     l = 0;
     for (i=0; i<val.list.val->len; i++) {
-        tp_obj e;
+        ObjType e;
         if (i!=0) {
             memcpy(s+l,delim.string.val,delim.string.len); l += delim.string.len;
         }
@@ -72,10 +72,10 @@ tp_obj str_join(TP) {
     return tp_track(tp,r);
 }
 
-tp_obj strsplit(TP) {
-    tp_obj v = TP_OBJ();
-    tp_obj d = TP_OBJ();
-    tp_obj r = tp_list(tp);
+ObjType strsplit(TP) {
+    ObjType v = TP_OBJ();
+    ObjType d = TP_OBJ();
+    ObjType r = tp_list(tp);
 
     int i;
     while ((i=_str_ind_(v,d))!=-1) {
@@ -87,42 +87,42 @@ tp_obj strsplit(TP) {
 }
 
 
-tp_obj _find(TP) {
-    tp_obj s = TP_OBJ();
-    tp_obj v = TP_OBJ();
+ObjType _find(TP) {
+    ObjType s = TP_OBJ();
+    ObjType v = TP_OBJ();
     return tp_number(_str_ind_(s,v));
 }
 
-tp_obj _str_index(TP) {
-    tp_obj s = TP_OBJ();
-    tp_obj v = TP_OBJ();
+ObjType _str_index(TP) {
+    ObjType s = TP_OBJ();
+    ObjType v = TP_OBJ();
     int n = _str_ind_(s,v);
     if (n >= 0) { return tp_number(n); }
     tp_raise(tp_None,tp_string("(_str_index) ValueError: substring not found"));
 }
 
-tp_obj tp_str2(TP) {
-    tp_obj v = TP_OBJ();
+ObjType tp_str2(TP) {
+    ObjType v = TP_OBJ();
     return tp_str(tp,v);
 }
 
-tp_obj tp_chr(TP) {
+ObjType tp_chr(TP) {
     int v = TP_NUM();
     return tp_string_n(tp->chars[(unsigned char)v],1);
 }
-tp_obj tp_ord(TP) {
-    tp_obj s = TP_STR();
+ObjType tp_ord(TP) {
+    ObjType s = TP_STR();
     if (s.string.len != 1) {
         tp_raise(tp_None,tp_string("(tp_ord) TypeError: ord() expected a character"));
     }
     return tp_number((unsigned char)s.string.val[0]);
 }
 
-tp_obj tp_strip(TP) {
-    tp_obj o = TP_TYPE(TP_STRING);
+ObjType tp_strip(TP) {
+    ObjType o = TP_TYPE(TP_STRING);
     char const *v = o.string.val; int l = o.string.len;
     int i; int a = l, b = 0;
-    tp_obj r;
+    ObjType r;
     char *s;
     for (i=0; i<l; i++) {
         if (v[i] != ' ' && v[i] != '\n' && v[i] != '\t' && v[i] != '\r') {
@@ -136,18 +136,18 @@ tp_obj tp_strip(TP) {
     return tp_track(tp,r);
 }
 
-tp_obj tp_replace(TP) {
-    tp_obj s = TP_OBJ();
-    tp_obj k = TP_OBJ();
-    tp_obj v = TP_OBJ();
-    tp_obj p = s;
+ObjType tp_replace(TP) {
+    ObjType s = TP_OBJ();
+    ObjType k = TP_OBJ();
+    ObjType v = TP_OBJ();
+    ObjType p = s;
     int i,n = 0;
     int c;
     int l;
-    tp_obj rr;
+    ObjType rr;
     char *r;
     char *d;
-    tp_obj z;
+    ObjType z;
     while ((i = _str_ind_(p,k)) != -1) {
         n += 1;
         p.string.val += i + k.string.len; p.string.len -= i + k.string.len;

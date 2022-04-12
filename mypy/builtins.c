@@ -1,6 +1,6 @@
-tp_obj tp_print(TP) {
+ObjType tp_print(TP) {
     int n = 0;
-    tp_obj e;
+    ObjType e;
     TP_LOOP(e)
         if (n) { printf(" "); }
         tp_echo(tp,e);
@@ -10,34 +10,34 @@ tp_obj tp_print(TP) {
     return tp_None;
 }
 
-tp_obj tp_bind(TP) {
-    tp_obj r = TP_TYPE(TP_FNC);
-    tp_obj self = TP_OBJ();
+ObjType tp_bind(TP) {
+    ObjType r = TP_TYPE(TP_FNC);
+    ObjType self = TP_OBJ();
     return tp_fnc_new(tp,
         r.fnc.ftype|2,r.fnc.cfnc,r.fnc.info->code,
         self,r.fnc.info->globals);
 }
 
-tp_obj tp_min(TP) {
-    tp_obj r = TP_OBJ();
-    tp_obj e;
+ObjType tp_min(TP) {
+    ObjType r = TP_OBJ();
+    ObjType e;
     TP_LOOP(e)
         if (tp_cmp(tp,r,e) > 0) { r = e; }
     TP_END;
     return r;
 }
 
-tp_obj tp_max(TP) {
-    tp_obj r = TP_OBJ();
-    tp_obj e;
+ObjType tp_max(TP) {
+    ObjType r = TP_OBJ();
+    ObjType e;
     TP_LOOP(e)
         if (tp_cmp(tp,r,e) < 0) { r = e; }
     TP_END;
     return r;
 }
 
-tp_obj tp_copy(TP) {
-    tp_obj r = TP_OBJ();
+ObjType tp_copy(TP) {
+    ObjType r = TP_OBJ();
     int type = r.type;
     if (type == TP_LIST) {
         return _tp_list_copy(tp,r);
@@ -48,20 +48,20 @@ tp_obj tp_copy(TP) {
 }
 
 
-tp_obj tp_len_(TP) {
-    tp_obj e = TP_OBJ();
+ObjType tp_len_(TP) {
+    ObjType e = TP_OBJ();
     return tp_len(tp,e);
 }
 
-tp_obj tp_assert(TP) {
+ObjType tp_assert(TP) {
     int a = TP_NUM();
     if (a) { return tp_None; }
     tp_raise(tp_None,tp_string("(tp_assert) AssertionError"));
 }
 
-tp_obj tp_range(TP) {
+ObjType tp_range(TP) {
     int a,b,c,i;
-    tp_obj r = tp_list(tp);
+    ObjType r = tp_list(tp);
     switch (tp->params.list.val->len) {
         case 1: a = 0; b = TP_NUM(); c = 1; break;
         case 2:
@@ -76,15 +76,15 @@ tp_obj tp_range(TP) {
     return r;
 }
 
-tp_obj tp_system(TP) {
+ObjType tp_system(TP) {
     char s[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),s,TP_CSTR_LEN);
     int r = system(s);
     return tp_number(r);
 }
 
-tp_obj tp_istype(TP) {
-    tp_obj v = TP_OBJ();
-    tp_obj t = TP_STR();
+ObjType tp_istype(TP) {
+    ObjType v = TP_OBJ();
+    ObjType t = TP_STR();
     if (tp_cmp(tp,t,tp_string("string")) == 0) { return tp_number(v.type == TP_STRING); }
     if (tp_cmp(tp,t,tp_string("list")) == 0) { return tp_number(v.type == TP_LIST); }
     if (tp_cmp(tp,t,tp_string("dict")) == 0) { return tp_number(v.type == TP_DICT); }
@@ -95,8 +95,8 @@ tp_obj tp_istype(TP) {
 }
 
 
-tp_obj tp_float(TP) {
-    tp_obj v = TP_OBJ();
+ObjType tp_float(TP) {
+    ObjType v = TP_OBJ();
     int ord = TP_DEFAULT(tp_number(0)).number.val;
     int type = v.type;
     if (type == TP_NUMBER) { return v; }
@@ -110,9 +110,9 @@ tp_obj tp_float(TP) {
 }
 
 
-tp_obj tp_save(TP) {
+ObjType tp_save(TP) {
     char fname[256]; tp_cstr(tp,TP_STR(),fname,256);
-    tp_obj v = TP_OBJ();
+    ObjType v = TP_OBJ();
     FILE *f;
     f = fopen(fname,"wb");
     if (!f) { tp_raise(tp_None,tp_string("(tp_save) IOError: ?")); }
@@ -121,10 +121,10 @@ tp_obj tp_save(TP) {
     return tp_None;
 }
 
-tp_obj tp_load(TP) {
+ObjType tp_load(TP) {
     FILE *f;
     long l;
-    tp_obj r;
+    ObjType r;
     char *s;
     char fname[256]; tp_cstr(tp,TP_STR(),fname,256);
     struct stat stbuf;
@@ -143,17 +143,17 @@ tp_obj tp_load(TP) {
 }
 
 
-tp_obj tp_fpack(TP) {
+ObjType tp_fpack(TP) {
     tp_num v = TP_NUM();
-    tp_obj r = to_string(tp,sizeof(tp_num));
+    ObjType r = to_string(tp,sizeof(tp_num));
     *(tp_num*)r.string.val = v;
     return tp_track(tp,r);
 }
 
-tp_obj tp_abs(TP) {
+ObjType tp_abs(TP) {
     return tp_number(fabs(tp_float(tp).number.val));
 }
-tp_obj tp_int(TP) {
+ObjType tp_int(TP) {
     return tp_number((long)tp_float(tp).number.val);
 }
 tp_num _roundf(tp_num v) {
@@ -161,24 +161,24 @@ tp_num _roundf(tp_num v) {
     av = (av-iv < 0.5?iv:iv+1);
     return (v<0?-av:av);
 }
-tp_obj tp_round(TP) {
+ObjType tp_round(TP) {
     return tp_number(_roundf(tp_float(tp).number.val));
 }
 
-tp_obj tp_exists(TP) {
+ObjType tp_exists(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
     return tp_number(!stat(fname,&stbuf));
 }
 
-tp_obj tp_mtime(TP) {
+ObjType tp_mtime(TP) {
     char fname[TP_CSTR_LEN]; tp_cstr(tp,TP_STR(),fname,TP_CSTR_LEN);
     struct stat stbuf;
     if (!stat(fname,&stbuf)) { return tp_number(stbuf.st_mtime); }
     tp_raise(tp_None,tp_string("(tp_mtime) IOError: ?"));
 }
 
-int _tp_lookup_(TP,tp_obj self, tp_obj k, tp_obj *meta, int depth) {
+int _tp_lookup_(TP,ObjType self, ObjType k, ObjType *meta, int depth) {
     int n = _tp_dict_find(tp,self.dict.val,k);
     if (n != -1) {
         *meta = self.dict.val->items[n].val;
@@ -196,39 +196,39 @@ int _tp_lookup_(TP,tp_obj self, tp_obj k, tp_obj *meta, int depth) {
     return 0;
 }
 
-int _tp_lookup(TP,tp_obj self, tp_obj k, tp_obj *meta) {
+int _tp_lookup(TP,ObjType self, ObjType k, ObjType *meta) {
     return _tp_lookup_(tp,self,k,meta,8);
 }
 
 #define TP_META_BEGIN(self,name) \
     if (self.dict.dtype == 2) { \
-        tp_obj meta; if (_tp_lookup(tp,self,tp_string(name),&meta)) {
+        ObjType meta; if (_tp_lookup(tp,self,tp_string(name),&meta)) {
 
 #define TP_META_END \
         } \
     }
 
-tp_obj tp_setmeta(TP) {
-    tp_obj self = TP_TYPE(TP_DICT);
-    tp_obj meta = TP_TYPE(TP_DICT);
+ObjType tp_setmeta(TP) {
+    ObjType self = TP_TYPE(TP_DICT);
+    ObjType meta = TP_TYPE(TP_DICT);
     self.dict.val->meta = meta;
     return tp_None;
 }
 
-tp_obj tp_getmeta(TP) {
-    tp_obj self = TP_TYPE(TP_DICT);
+ObjType tp_getmeta(TP) {
+    ObjType self = TP_TYPE(TP_DICT);
     return self.dict.val->meta;
 }
 
-tp_obj tp_object(TP) {
-    tp_obj self = tp_dict(tp);
+ObjType tp_object(TP) {
+    ObjType self = tp_dict(tp);
     self.dict.dtype = 2;
     return self;
 }
 
-tp_obj tp_object_new(TP) {
-    tp_obj klass = TP_TYPE(TP_DICT);
-    tp_obj self = tp_object(tp);
+ObjType tp_object_new(TP) {
+    ObjType klass = TP_TYPE(TP_DICT);
+    ObjType self = tp_object(tp);
     self.dict.val->meta = klass;
     TP_META_BEGIN(self,"__init__");
         tp_call(tp,meta,tp->params);
@@ -236,8 +236,8 @@ tp_obj tp_object_new(TP) {
     return self;
 }
 
-tp_obj tp_object_call(TP) {
-    tp_obj self;
+ObjType tp_object_call(TP) {
+    ObjType self;
     if (tp->params.list.val->len) {
         self = TP_TYPE(TP_DICT);
         self.dict.dtype = 2;
@@ -248,19 +248,19 @@ tp_obj tp_object_call(TP) {
 }
 
 
-tp_obj tp_getraw(TP) {
-    tp_obj self = TP_TYPE(TP_DICT);
+ObjType tp_getraw(TP) {
+    ObjType self = TP_TYPE(TP_DICT);
     self.dict.dtype = 0;
     return self;
 }
 
-tp_obj tp_class(TP) {
-    tp_obj klass = tp_dict(tp);
+ObjType tp_class(TP) {
+    ObjType klass = tp_dict(tp);
     klass.dict.val->meta = tp_get(tp,tp->builtins,tp_string("object")); 
     return klass;
 }
 
-tp_obj tp_builtins_bool(TP) {
-    tp_obj v = TP_OBJ();
+ObjType tp_builtins_bool(TP) {
+    ObjType v = TP_OBJ();
     return (tp_number(tp_bool(tp, v)));
 }

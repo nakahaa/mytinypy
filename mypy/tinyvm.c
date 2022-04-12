@@ -1,12 +1,12 @@
-tp_vm *_vm_init(void) {
+VmType *_vm_init(void) {
     int i;
-    tp_vm *tp = (tp_vm*)calloc(sizeof(tp_vm),1);
+    VmType *tp = (VmType*)calloc(sizeof(VmType),1);
     tp->time_limit = TP_NO_LIMIT;
     tp->clocks = clock();
     tp->time_elapsed = 0.0;
     tp->mem_limit = TP_NO_LIMIT;
     tp->mem_exceeded = 0;
-    tp->mem_used = sizeof(tp_vm);
+    tp->mem_used = sizeof(VmType);
     tp->cur = 0;
     tp->jmp = 0;
     tp->ex = tp_None;
@@ -26,7 +26,7 @@ tp_vm *_vm_init(void) {
     tp_set(tp,tp->builtins,tp_string("MODULES"),tp->modules);
     tp_set(tp,tp->modules,tp_string("BUILTINS"),tp->builtins);
     tp_set(tp,tp->builtins,tp_string("BUILTINS"),tp->builtins);
-    tp_obj sys = tp_dict(tp);
+    ObjType sys = tp_dict(tp);
     tp_set(tp, sys, tp_string("version"), tp_string("tinypy 1.2+SVN"));
     tp_set(tp,tp->modules, tp_string("sys"), sys);
     tp->regs = tp->_regs.list.val->items;
@@ -41,15 +41,15 @@ void tp_deinit(TP) {
     tp_full(tp); tp_full(tp);
     tp_delete(tp,tp->root);
     tp_gc_deinit(tp);
-    tp->mem_used -= sizeof(tp_vm); 
+    tp->mem_used -= sizeof(VmType); 
     free(tp);
 }
 
-void tp_frame(TP,tp_obj globals,tp_obj code,tp_obj *ret_dest) {
-    tp_frame_ f;
+void tp_frame(TP,ObjType globals,ObjType code,ObjType *ret_dest) {
+    FrameType f;
     f.globals = globals;
     f.code = code;
-    f.cur = (tp_code*)f.code.string.val;
+    f.cur = (CodeType*)f.code.string.val;
     f.jmp = 0;
     f.regs = (tp->cur <= 0?tp->regs:tp->frames[tp->cur].regs+tp->frames[tp->cur].cregs);
     
@@ -70,7 +70,7 @@ void tp_frame(TP,tp_obj globals,tp_obj code,tp_obj *ret_dest) {
     tp->frames[tp->cur] = f;
 }
 
-void _tp_raise(TP,tp_obj e) {
+void _tp_raise(TP,ObjType e) {
     if (!tp || !tp->jmp) {
 #ifndef CPYTHON_MOD
         printf("\nException:\n"); tp_echo(tp,e); printf("\n");
@@ -117,12 +117,12 @@ void tp_handle(TP) {
 #endif
 }
 
-tp_obj tp_call(TP,tp_obj self, tp_obj params) {
+ObjType tp_call(TP,ObjType self, ObjType params) {
     tp->params = params;
 
     if (self.type == TP_DICT) {
         if (self.dict.dtype == 1) {
-            tp_obj meta; if (_tp_lookup(tp,self,tp_string("__new__"),&meta)) {
+            ObjType meta; if (_tp_lookup(tp,self,tp_string("__new__"),&meta)) {
                 _tp_list_insert(tp,params.list.val,0,self);
                 return tp_call(tp,meta,params);
             }
@@ -133,12 +133,12 @@ tp_obj tp_call(TP,tp_obj self, tp_obj params) {
         }
     }
     if (self.type == TP_FNC && !(self.fnc.ftype&1)) {
-        tp_obj r = _tp_tcall(tp,self);
+        ObjType r = _tp_tcall(tp,self);
         tp_grey(tp,r);
         return r;
     }
     if (self.type == TP_FNC) {
-        tp_obj dest = tp_None;
+        ObjType dest = tp_None;
         tp_frame(tp,self.fnc.info->globals,self.fnc.info->code,&dest);
         if ((self.fnc.ftype&2)) {
             tp->frames[tp->cur].regs[0] = params;
@@ -154,10 +154,10 @@ tp_obj tp_call(TP,tp_obj self, tp_obj params) {
 }
 
 
-void tp_return(TP, tp_obj v) {
-    tp_obj *dest = tp->frames[tp->cur].ret_dest;
+void tp_return(TP, ObjType v) {
+    ObjType *dest = tp->frames[tp->cur].ret_dest;
     if (dest) { *dest = v; tp_grey(tp,v); }
-    memset(tp->frames[tp->cur].regs-TP_REGS_EXTRA,0,(TP_REGS_EXTRA+tp->frames[tp->cur].cregs)*sizeof(tp_obj));
+    memset(tp->frames[tp->cur].regs-TP_REGS_EXTRA,0,(TP_REGS_EXTRA+tp->frames[tp->cur].cregs)*sizeof(ObjType));
     tp->cur -= 1;
 }
 
@@ -184,14 +184,14 @@ enum {
 
 
 int tp_step(TP) {
-    tp_frame_ *f = &tp->frames[tp->cur];
-    tp_obj *regs = f->regs;
-    tp_code *cur = f->cur;
+    FrameType *f = &tp->frames[tp->cur];
+    ObjType *regs = f->regs;
+    CodeType *cur = f->cur;
     while(1) {
     #ifdef TP_SANDBOX
     tp_bounds(tp,cur,1);
     #endif
-    tp_code e = *cur;
+    CodeType e = *cur;
 
     switch (e.i) {
         case TP_IEOF: tp_return(tp,tp_None); SR(0); break;
@@ -326,15 +326,15 @@ void tp_run(TP,int cur) {
 }
 
 
-tp_obj tp_ez_call(TP, const char *mod, const char *fnc, tp_obj params) {
-    tp_obj tmp;
+ObjType tp_ez_call(TP, const char *mod, const char *fnc, ObjType params) {
+    ObjType tmp;
     tmp = tp_get(tp,tp->modules,tp_string(mod));
     tmp = tp_get(tp,tmp,tp_string(fnc));
     return tp_call(tp,tmp,params);
 }
 
-tp_obj _tp_import(TP, tp_obj fname, tp_obj name, tp_obj code) {
-    tp_obj g;
+ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code) {
+    ObjType g;
 
     if (!((fname.type != TP_NONE && _str_ind_(fname,tp_string(".tpc"))!=-1) || code.type != TP_NONE)) {
         return tp_ez_call(tp,"py2bc","import_fname",tp_params_v(tp,2,fname,name));
@@ -357,27 +357,27 @@ tp_obj _tp_import(TP, tp_obj fname, tp_obj name, tp_obj code) {
     return g;
 }
 
-tp_obj tp_import(TP, const char * fname, const char * name, void *codes, int len) {
-    tp_obj f = fname?tp_string(fname):tp_None;
-    tp_obj bc = codes?tp_string_n((const char*)codes,len):tp_None;
+ObjType tp_import(TP, const char * fname, const char * name, void *codes, int len) {
+    ObjType f = fname?tp_string(fname):tp_None;
+    ObjType bc = codes?tp_string_n((const char*)codes,len):tp_None;
     return _tp_import(tp,f,tp_string(name),bc);
 }
 
 
 
-tp_obj tp_exec_(TP) {
-    tp_obj code = TP_OBJ();
-    tp_obj globals = TP_OBJ();
-    tp_obj r = tp_None;
+ObjType tp_exec_(TP) {
+    ObjType code = TP_OBJ();
+    ObjType globals = TP_OBJ();
+    ObjType r = tp_None;
     tp_frame(tp,globals,code,&r);
     tp_run(tp,tp->cur);
     return r;
 }
 
 
-tp_obj tp_import_(TP) {
-    tp_obj mod = TP_OBJ();
-    tp_obj r;
+ObjType tp_import_(TP) {
+    ObjType mod = TP_OBJ();
+    ObjType r;
 
     if (tp_has(tp,tp->modules,mod).number.val) {
         return tp_get(tp,tp->modules,mod);
@@ -388,7 +388,7 @@ tp_obj tp_import_(TP) {
 }
 
 void tp_builtins(TP) {
-    tp_obj o;
+    ObjType o;
     struct {const char *s;void *f;} b[] = {
     {"print",tp_print}, {"range",tp_range}, {"min",tp_min},
     {"max",tp_max}, {"bind",tp_bind}, {"copy",tp_copy},
@@ -407,7 +407,7 @@ void tp_builtins(TP) {
     {0,0},
     };
     int i; for(i=0; b[i].s; i++) {
-        tp_set(tp,tp->builtins,tp_string(b[i].s),tp_fnc(tp,(tp_obj (*)(tp_vm *))b[i].f));
+        tp_set(tp,tp->builtins,tp_string(b[i].s),tp_fnc(tp,(ObjType (*)(VmType *))b[i].f));
     }
     
     o = tp_object(tp);
@@ -418,34 +418,34 @@ void tp_builtins(TP) {
 
 
 void tp_args(TP,int argc, char *argv[]) {
-    tp_obj self = tp_list(tp);
+    ObjType self = tp_list(tp);
     int i;
     for (i=1; i<argc; i++) { _tp_list_append(tp,self.list.val,tp_string(argv[i])); }
     tp_set(tp,tp->builtins,tp_string("ARGV"),self);
 }
 
-tp_obj tp_main(TP,char *fname, void *code, int len) {
+ObjType tp_main(TP,char *fname, void *code, int len) {
     return tp_import(tp,fname,"__main__",code, len);
 }
 
-tp_obj tp_compile(TP, tp_obj text, tp_obj fname) {
+ObjType tp_compile(TP, ObjType text, ObjType fname) {
     return tp_ez_call(tp,"BUILTINS","compile",tp_params_v(tp,2,text,fname));
 }
 
-tp_obj tp_exec(TP, tp_obj code, tp_obj globals) {
-    tp_obj r=tp_None;
+ObjType tp_exec(TP, ObjType code, ObjType globals) {
+    ObjType r=tp_None;
     tp_frame(tp,globals,code,&r);
     tp_run(tp,tp->cur);
     return r;
 }
 
-tp_obj tp_eval(TP, const char *text, tp_obj globals) {
-    tp_obj code = tp_compile(tp,tp_string(text),tp_string("<eval>"));
+ObjType tp_eval(TP, const char *text, ObjType globals) {
+    ObjType code = tp_compile(tp,tp_string(text),tp_string("<eval>"));
     return tp_exec(tp,code,globals);
 }
 
-tp_vm *tp_init(int argc, char *argv[]) {
-    tp_vm *tp = _vm_init();
+VmType *tp_init(int argc, char *argv[]) {
+    VmType *tp = _vm_init();
     tp_builtins(tp);
     tp_args(tp,argc,argv);
     compile_code(tp);

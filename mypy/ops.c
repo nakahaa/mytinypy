@@ -1,4 +1,4 @@
-tp_obj tp_str(TP,tp_obj self) {
+ObjType tp_str(TP,ObjType self) {
     int type = self.type;
     if (type == TP_STRING) { return self; }
     if (type == TP_NUMBER) {
@@ -20,7 +20,7 @@ tp_obj tp_str(TP,tp_obj self) {
 }
 
 
-int tp_bool(TP,tp_obj v) {
+int tp_bool(TP,ObjType v) {
     switch(v.type) {
         case TP_NUMBER: return v.number.val != 0;
         case TP_NONE: return 0;
@@ -32,7 +32,7 @@ int tp_bool(TP,tp_obj v) {
 }
 
 
-tp_obj tp_has(TP,tp_obj self, tp_obj k) {
+ObjType tp_has(TP,ObjType self, ObjType k) {
     int type = self.type;
     if (type == TP_DICT) {
         if (_tp_dict_find(tp,self.dict.val,k) != -1) { return tp_True; }
@@ -46,7 +46,7 @@ tp_obj tp_has(TP,tp_obj self, tp_obj k) {
 }
 
 
-void tp_del(TP,tp_obj self, tp_obj k) {
+void tp_del(TP,ObjType self, ObjType k) {
     int type = self.type;
     if (type == TP_DICT) {
         _tp_dict_del(tp,self.dict.val,k,"tp_del");
@@ -56,7 +56,7 @@ void tp_del(TP,tp_obj self, tp_obj k) {
 }
 
 
-tp_obj tp_iter(TP,tp_obj self, tp_obj k) {
+ObjType tp_iter(TP,ObjType self, ObjType k) {
     int type = self.type;
     if (type == TP_LIST || type == TP_STRING) { return tp_get(tp,self,k); }
     if (type == TP_DICT && k.type == TP_NUMBER) {
@@ -66,9 +66,9 @@ tp_obj tp_iter(TP,tp_obj self, tp_obj k) {
 }
 
 
-tp_obj tp_get(TP,tp_obj self, tp_obj k) {
+ObjType tp_get(TP,ObjType self, ObjType k) {
     int type = self.type;
-    tp_obj r;
+    ObjType r;
     if (type == TP_DICT) {
         TP_META_BEGIN(self,"__get__");
             return tp_call(tp,meta,tp_params_v(tp,1,k));
@@ -124,7 +124,7 @@ tp_obj tp_get(TP,tp_obj self, tp_obj k) {
 
     if (k.type == TP_LIST) {
         int a,b,l;
-        tp_obj tmp;
+        ObjType tmp;
         l = tp_len(tp,self).number.val;
         tmp = tp_get(tp,k,tp_number(0));
         if (tmp.type == TP_NUMBER) { a = tmp.number.val; }
@@ -145,7 +145,7 @@ tp_obj tp_get(TP,tp_obj self, tp_obj k) {
     tp_raise(tp_None,tp_string("(tp_get) TypeError: ?"));
 }
 
-int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) {
+int tp_iget(TP,ObjType *r, ObjType self, ObjType k) {
     if (self.type == TP_DICT) {
         int n = _tp_dict_find(tp,self.dict.val,k);
         if (n == -1) { return 0; }
@@ -159,7 +159,7 @@ int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) {
 }
 
 
-void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) {
+void tp_set(TP,ObjType self, ObjType k, ObjType v) {
     int type = self.type;
 
     if (type == TP_DICT) {
@@ -186,17 +186,17 @@ void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) {
     tp_raise(,tp_string("(tp_set) TypeError: object does not support item assignment"));
 }
 
-tp_obj tp_add(TP,tp_obj a, tp_obj b) {
+ObjType tp_add(TP,ObjType a, ObjType b) {
     if (a.type == TP_NUMBER && a.type == b.type) {
         return tp_number(a.number.val+b.number.val);
     } else if (a.type == TP_STRING && a.type == b.type) {
         int al = a.string.len, bl = b.string.len;
-        tp_obj r = to_string(tp,al+bl);
+        ObjType r = to_string(tp,al+bl);
         char *s = r.string.info->s;
         memcpy(s,a.string.val,al); memcpy(s+al,b.string.val,bl);
         return tp_track(tp,r);
     } else if (a.type == TP_LIST && a.type == b.type) {
-        tp_obj r;
+        ObjType r;
         tp_params_v(tp,1,a);
         r = tp_copy(tp);
         tp_params_v(tp,2,r,b);
@@ -206,20 +206,20 @@ tp_obj tp_add(TP,tp_obj a, tp_obj b) {
     tp_raise(tp_None,tp_string("(tp_add) TypeError: ?"));
 }
 
-tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
+ObjType tp_mul(TP,ObjType a, ObjType b) {
     if (a.type == TP_NUMBER && a.type == b.type) {
         return tp_number(a.number.val*b.number.val);
     } else if ((a.type == TP_STRING && b.type == TP_NUMBER) || 
                (a.type == TP_NUMBER && b.type == TP_STRING)) {
         if(a.type == TP_NUMBER) {
-            tp_obj c = a; a = b; b = c;
+            ObjType c = a; a = b; b = c;
         }
         int al = a.string.len; int n = b.number.val;
         if(n <= 0) {
-            tp_obj r = to_string(tp,0);
+            ObjType r = to_string(tp,0);
             return tp_track(tp,r);
         }
-        tp_obj r = to_string(tp,al*n);
+        ObjType r = to_string(tp,al*n);
         char *s = r.string.info->s;
         int i; for (i=0; i<n; i++) { memcpy(s+al*i,a.string.val,al); }
         return tp_track(tp,r);
@@ -227,7 +227,7 @@ tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
     tp_raise(tp_None,tp_string("(tp_mul) TypeError: ?"));
 }
 
-tp_obj tp_len(TP,tp_obj self) {
+ObjType tp_len(TP,ObjType self) {
     int type = self.type;
     if (type == TP_STRING) {
         return tp_number(self.string.len);
@@ -240,7 +240,7 @@ tp_obj tp_len(TP,tp_obj self) {
     tp_raise(tp_None,tp_string("(tp_len) TypeError: len() of unsized object"));
 }
 
-int tp_cmp(TP,tp_obj a, tp_obj b) {
+int tp_cmp(TP,ObjType a, ObjType b) {
     if (a.type != b.type) { return a.type-b.type; }
     switch(a.type) {
         case TP_NONE: return 0;
@@ -255,7 +255,7 @@ int tp_cmp(TP,tp_obj a, tp_obj b) {
         }
         case TP_LIST: {
             int n,v; for(n=0;n<_tp_min(a.list.val->len,b.list.val->len);n++) {
-        tp_obj aa = a.list.val->items[n]; tp_obj bb = b.list.val->items[n];
+        ObjType aa = a.list.val->items[n]; ObjType bb = b.list.val->items[n];
             if (aa.type == TP_LIST && bb.type == TP_LIST) { v = aa.list.val-bb.list.val; } else { v = tp_cmp(tp,aa,bb); }
             if (v) { return v; } }
             return a.list.val->len-b.list.val->len;
@@ -268,7 +268,7 @@ int tp_cmp(TP,tp_obj a, tp_obj b) {
 }
 
 #define TP_OP(name,expr) \
-    tp_obj name(TP,tp_obj _a,tp_obj _b) { \
+    ObjType name(TP,ObjType _a,ObjType _b) { \
     if (_a.type == TP_NUMBER && _a.type == _b.type) { \
         tp_num a = _a.number.val; tp_num b = _b.number.val; \
         return tp_number(expr); \
@@ -286,7 +286,7 @@ TP_OP(tp_sub,a-b);
 TP_OP(tp_div,a/b);
 TP_OP(tp_pow,pow(a,b));
 
-tp_obj tp_bitwise_not(TP, tp_obj a) {
+ObjType tp_bitwise_not(TP, ObjType a) {
     if (a.type == TP_NUMBER) {
         return tp_number(~(long)a.number.val);
     }

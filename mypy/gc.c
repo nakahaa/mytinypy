@@ -1,5 +1,5 @@
 
-void tp_grey(TP,tp_obj v) {
+void tp_grey(TP,ObjType v) {
     if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data) { return; }
     *v.gci.data = 1;
     if (v.type == TP_STRING || v.type == TP_DATA) {
@@ -9,7 +9,7 @@ void tp_grey(TP,tp_obj v) {
     _tp_list_appendx(tp,tp->grey,v);
 }
 
-void tp_follow(TP,tp_obj v) {
+void tp_follow(TP,ObjType v) {
     int type = v.type;
     if (type == TP_LIST) {
         int n;
@@ -35,7 +35,7 @@ void tp_follow(TP,tp_obj v) {
 
 void tp_reset(TP) {
     int n;
-    _tp_list *tmp;
+    _list *tmp;
     for (n=0; n<tp->black->len; n++) {
         *tp->black->items[n].gci.data = 0;
     }
@@ -57,7 +57,7 @@ void tp_gc_deinit(TP) {
     _tp_list_free(tp, tp->black);
 }
 
-void tp_delete(TP,tp_obj v) {
+void tp_delete(TP,ObjType v) {
     int type = v.type;
     if (type == TP_LIST) {
         _tp_list_free(tp, v.list.val);
@@ -84,7 +84,7 @@ void tp_delete(TP,tp_obj v) {
 void tp_collect(TP) {
     int n;
     for (n=0; n<tp->white->len; n++) {
-        tp_obj r = tp->white->items[n];
+        ObjType r = tp->white->items[n];
         if (*r.gci.data) { continue; }
         tp_delete(tp,r);
     }
@@ -93,7 +93,7 @@ void tp_collect(TP) {
 }
 
 void _tp_gcinc(TP) {
-    tp_obj v;
+    ObjType v;
     if (!tp->grey->len) {
         return;
     }
@@ -121,7 +121,7 @@ void tp_gcinc(TP) {
     return;
 }
 
-tp_obj tp_track(TP,tp_obj v) {
+ObjType tp_track(TP,ObjType v) {
     tp_gcinc(tp);
     tp_grey(tp,v);
     return v;

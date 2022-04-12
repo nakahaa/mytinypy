@@ -6,12 +6,12 @@ int tp_lua_hash(void const *v,int l) {
     }
     return h;
 }
-void _tp_dict_free(TP, _tp_dict *self) {
+void _tp_dict_free(TP, _dict *self) {
     tp_free(tp, self->items);
     tp_free(tp, self);
 }
 
-int tp_hash(TP,tp_obj v) {
+int tp_hash(TP,ObjType v) {
     switch (v.type) {
         case TP_NONE: return 0;
         case TP_NUMBER: return tp_lua_hash(&v.number.val,sizeof(tp_num));
@@ -19,7 +19,7 @@ int tp_hash(TP,tp_obj v) {
         case TP_DICT: return tp_lua_hash(&v.dict.val,sizeof(void*));
         case TP_LIST: {
             int r = v.list.val->len; int n; for(n=0; n<v.list.val->len; n++) {
-            tp_obj vv = v.list.val->items[n]; r += vv.type != TP_LIST?tp_hash(tp,v.list.val->items[n]):tp_lua_hash(&vv.list.val,sizeof(void*)); } return r;
+            ObjType vv = v.list.val->items[n]; r += vv.type != TP_LIST?tp_hash(tp,v.list.val->items[n]):tp_lua_hash(&vv.list.val,sizeof(void*)); } return r;
         }
         case TP_FNC: return tp_lua_hash(&v.fnc.info,sizeof(void*));
         case TP_DATA: return tp_lua_hash(&v.data.val,sizeof(void*));
@@ -27,8 +27,8 @@ int tp_hash(TP,tp_obj v) {
     tp_raise(0,tp_string("(tp_hash) TypeError: value unhashable"));
 }
 
-void _tp_dict_hash_set(TP,_tp_dict *self, int hash, tp_obj k, tp_obj v) {
-    tp_item item;
+void _tp_dict_hash_set(TP,_dict *self, int hash, ObjType k, ObjType v) {
+    ItemType item;
     int i,idx = hash&self->mask;
     for (i=idx; i<idx+self->alloc; i++) {
         int n = i&self->mask;
@@ -45,12 +45,12 @@ void _tp_dict_hash_set(TP,_tp_dict *self, int hash, tp_obj k, tp_obj v) {
     tp_raise(,tp_string("(_tp_dict_hash_set) RuntimeError: ?"));
 }
 
-void _tp_dict_tp_realloc(TP,_tp_dict *self,int len) {
-    tp_item *items = self->items;
+void _tp_dict_tp_realloc(TP,_dict *self,int len) {
+    ItemType *items = self->items;
     int i,alloc = self->alloc;
     len = _tp_max(8,len);
 
-    self->items = (tp_item*)tp_malloc(tp, len*sizeof(tp_item));
+    self->items = (ItemType*)tp_malloc(tp, len*sizeof(ItemType));
     self->alloc = len; self->mask = len-1;
     self->len = 0; self->used = 0;
 
@@ -61,7 +61,7 @@ void _tp_dict_tp_realloc(TP,_tp_dict *self,int len) {
     tp_free(tp, items);
 }
 
-int _tp_dict_hash_find(TP,_tp_dict *self, int hash, tp_obj k) {
+int _tp_dict_hash_find(TP,_dict *self, int hash, ObjType k) {
     int i,idx = hash&self->mask;
     for (i=idx; i<idx+self->alloc; i++) {
         int n = i&self->mask;
@@ -73,11 +73,11 @@ int _tp_dict_hash_find(TP,_tp_dict *self, int hash, tp_obj k) {
     }
     return -1;
 }
-int _tp_dict_find(TP,_tp_dict *self,tp_obj k) {
+int _tp_dict_find(TP,_dict *self,ObjType k) {
     return _tp_dict_hash_find(tp,self,tp_hash(tp,k),k);
 }
 
-void _tp_dict_setx(TP,_tp_dict *self,tp_obj k, tp_obj v) {
+void _tp_dict_setx(TP,_dict *self,ObjType k, ObjType v) {
     int hash = tp_hash(tp,k); int n = _tp_dict_hash_find(tp,self,hash,k);
     if (n == -1) {
         if (self->len >= (self->alloc/2)) {
@@ -91,12 +91,12 @@ void _tp_dict_setx(TP,_tp_dict *self,tp_obj k, tp_obj v) {
     }
 }
 
-void _tp_dict_set(TP,_tp_dict *self,tp_obj k, tp_obj v) {
+void _tp_dict_set(TP,_dict *self,ObjType k, ObjType v) {
     _tp_dict_setx(tp,self,k,v);
     tp_grey(tp,k); tp_grey(tp,v);
 }
 
-tp_obj _tp_dict_get(TP,_tp_dict *self,tp_obj k, const char *error) {
+ObjType _tp_dict_get(TP,_dict *self,ObjType k, const char *error) {
     int n = _tp_dict_find(tp,self,k);
     if (n < 0) {
         tp_raise(tp_None,tp_add(tp,tp_string("(_tp_dict_get) KeyError: "),tp_str(tp,k)));
@@ -104,7 +104,7 @@ tp_obj _tp_dict_get(TP,_tp_dict *self,tp_obj k, const char *error) {
     return self->items[n].val;
 }
 
-void _tp_dict_del(TP,_tp_dict *self,tp_obj k, const char *error) {
+void _tp_dict_del(TP,_dict *self,ObjType k, const char *error) {
     int n = _tp_dict_find(tp,self,k);
     if (n < 0) {
         tp_raise(,tp_add(tp,tp_string("(_tp_dict_del) KeyError: "),tp_str(tp,k)));
@@ -113,23 +113,23 @@ void _tp_dict_del(TP,_tp_dict *self,tp_obj k, const char *error) {
     self->len -= 1;
 }
 
-_tp_dict *_tp_dict_new(TP) {
-    _tp_dict *self = (_tp_dict*)tp_malloc(tp, sizeof(_tp_dict));
+_dict *_tp_dict_new(TP) {
+    _dict *self = (_dict*)tp_malloc(tp, sizeof(_dict));
     return self;
 }
-tp_obj _tp_dict_copy(TP,tp_obj rr) {
-    tp_obj obj = {TP_DICT};
-    _tp_dict *o = rr.dict.val;
-    _tp_dict *r = _tp_dict_new(tp);
+ObjType _tp_dict_copy(TP,ObjType rr) {
+    ObjType obj = {TP_DICT};
+    _dict *o = rr.dict.val;
+    _dict *r = _tp_dict_new(tp);
     *r = *o; r->gci = 0;
-    r->items = (tp_item*)tp_malloc(tp, sizeof(tp_item)*o->alloc);
-    memcpy(r->items,o->items,sizeof(tp_item)*o->alloc);
+    r->items = (ItemType*)tp_malloc(tp, sizeof(ItemType)*o->alloc);
+    memcpy(r->items,o->items,sizeof(ItemType)*o->alloc);
     obj.dict.val = r;
     obj.dict.dtype = 1;
     return tp_track(tp,obj);
 }
 
-int _tp_dict_next(TP,_tp_dict *self) {
+int _tp_dict_next(TP,_dict *self) {
     if (!self->len) {
         tp_raise(0,tp_string("(_tp_dict_next) RuntimeError"));
     }
@@ -141,9 +141,9 @@ int _tp_dict_next(TP,_tp_dict *self) {
     }
 }
 
-tp_obj tp_merge(TP) {
-    tp_obj self = TP_OBJ();
-    tp_obj v = TP_OBJ();
+ObjType tp_merge(TP) {
+    ObjType self = TP_OBJ();
+    ObjType v = TP_OBJ();
     int i; for (i=0; i<v.dict.val->len; i++) {
         int n = _tp_dict_next(tp,v.dict.val);
         _tp_dict_set(tp,self.dict.val,
@@ -152,15 +152,15 @@ tp_obj tp_merge(TP) {
     return tp_None;
 }
 
-tp_obj tp_dict(TP) {
-    tp_obj r = {TP_DICT};
+ObjType tp_dict(TP) {
+    ObjType r = {TP_DICT};
     r.dict.val = _tp_dict_new(tp);
     r.dict.dtype = 1;
     return tp ? tp_track(tp,r) : r;
 }
 
-tp_obj tp_dict_n(TP,int n, tp_obj* argv) {
-    tp_obj r = tp_dict(tp);
+ObjType tp_dict_n(TP,int n, ObjType* argv) {
+    ObjType r = tp_dict(tp);
     int i; for (i=0; i<n; i++) { tp_set(tp,r,argv[i*2],argv[i*2+1]); }
     return r;
 }
