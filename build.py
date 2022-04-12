@@ -18,7 +18,7 @@ def main():
 
     cmd = sys.argv[1]
     if cmd == "mypy":
-        os.system('gcc -std=c99 -Wall -Wc++-compat  -O3 mypy/mymain.c -lm -o mypy/mypy')
+        os.system('gcc -std=c99 -Wall -Wc++-compat  -O3 mypy/main.c -lm -o mypy/mypy')
     elif cmd == "clean":
         os.system("rm -f mypy/*.pyc; rm -f mypy/*.tpc; rm -rf mypy/mypy")
     else:
