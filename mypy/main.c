@@ -1,4 +1,4 @@
-#include "tp.c"
+#include "type.c"
 
 int main(int argc, char *argv[]) {
     VmType *tp = tp_init(argc,argv);

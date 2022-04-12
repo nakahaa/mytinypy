@@ -3,15 +3,14 @@
 #endif
 
 #include "type.h"
-#include "list.c"
-#include "dict.c"
+#include "listdict.c"
 #include "string.c"
 #include "builtins.c"
 #include "gc.c"
 #include "ops.c"
+#include "tinyvm.c"
 
 void compile_code(TP);
-#include "vm.c"
 
 ObjType NONE = {NONETYPE};
 
