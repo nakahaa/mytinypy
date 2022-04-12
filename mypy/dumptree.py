@@ -1,6 +1,8 @@
 import tokenize
-import sys
 from tokenize import Token
+import tokenize
+import parse
+import encode
 
 syntaxMap = {}
 
@@ -11,7 +13,6 @@ def merge(a, b):
     else:
         for k in b:
             setattr(a, k, b[k])
-
 
 def number(v):
     if type(v) is str and v[0:2] == '0x':
@@ -93,7 +94,7 @@ class DState:
 def insert(v): D.out.append(v)
 
 
-def write(v, tags):
+def write(v):
     if istype(v, 'list'):
         insert(v)
         return
@@ -102,15 +103,12 @@ def write(v, tags):
 
 
 def setpos(v):
-    if '-nopos' in ARGV:
-        return
     line, x = v
     if line == D.lineno:
         return
     text = D.lines[line-1]
     D.lineno = line
     val = text + "\0"*(4-len(text) % 4)
-    code_16(POS, len(val)/4, line)
     write(val)
 
 
@@ -531,7 +529,6 @@ def visit_name(t, tabs):
 def visit_local(t, tabs):
     if t.val in D.rglobals:
         D.error = True
-        tokenize.u_error('UnboundLocalError', D.code, t.pos)
     if t.val not in D.vars:
         D.vars.append(t.val)
     return get_reg(t.val)
@@ -806,15 +803,12 @@ def visit(t, tabs):
 
 
 def genTree(fname, s):
-    s = load(s)
     tokens = tokenize.tokenize(s)
     t = parse.parse(s, tokens)
-    r, _ = _compile(s, src)
-    print("global:")
     t = Token((1, 1), 'module', 'module', [t])
     global D
     s = tokenize.clean(s)
     D = DState(s, fname)
     D.begin(True)
-    visit(t, tabs = 2)
+    visit(fname, tabs = 2)
     D.end()

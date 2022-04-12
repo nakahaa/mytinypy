@@ -60,20 +60,6 @@ def save(fname, v):
     f.write(v)
     f.close()
 
-
-def _compile(s, fname):
-    tokens = tokenize.tokenize(s)
-    t = parse.parse(s, tokens)
-    r, tmpCode = encode.encode(fname, s, t)
-    return r, tmpCode
-
-def _dumptree(src, fname):
-    s = load(src)
-    tokens = tokenize.tokenize(s)
-    t = parse.parse(s, tokens)
-    dumptree.genTree(fname, t)
-
-
 def _import(name):
     if name in MODULES:
         return MODULES[name]
@@ -119,6 +105,19 @@ def main(src, dest):
     r, _ = _compile(s, src)
     save(dest, r)
 
+def _dumptree(src):
+    s = load(src)
+    # dumptree.genTree(s, src)
+    tokens = tokenize.tokenize(s)
+    t = parse.parse(s, tokens)
+    print(t)
+
+def _compile(s, fname):
+    tokens = tokenize.tokenize(s)
+    t = parse.parse(s, tokens)
+    r, tmpCode = encode.encode(fname, s, t)
+    return r, tmpCode
+
 def genCode(src):
     s = load(src)
     _, genCodes = _compile(s, src)
@@ -131,3 +130,6 @@ if __name__ == '__main__':
 
     if sys.argv[2] == "dumpCode":
         main(sys.argv[1], "tmpCode")
+
+    if sys.argv[2] == "dumptree":
+        _dumptree(sys.argv[1])
