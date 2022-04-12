@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "type.h": "c"
+        "type.h": "c",
+        "myvm.h": "c"
     }
 }
