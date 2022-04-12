@@ -134,7 +134,7 @@ tp_obj tp_load(TP) {
     if (!f) {
         tp_raise(tp_None,tp_string("(tp_load) IOError: ?"));
     }
-    r = tp_string_t(tp,l);
+    r = to_string(tp,l);
     s = r.string.info->s;
     fread(s,1,l,f);
 /*    if (rr !=l) { printf("hmmn: %d %d\n",rr,(int)l); }*/
@@ -145,7 +145,7 @@ tp_obj tp_load(TP) {
 
 tp_obj tp_fpack(TP) {
     tp_num v = TP_NUM();
-    tp_obj r = tp_string_t(tp,sizeof(tp_num));
+    tp_obj r = to_string(tp,sizeof(tp_num));
     *(tp_num*)r.string.val = v;
     return tp_track(tp,r);
 }

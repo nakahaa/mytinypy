@@ -3,18 +3,18 @@ tp_obj tp_str(TP,tp_obj self) {
     if (type == TP_STRING) { return self; }
     if (type == TP_NUMBER) {
         tp_num v = self.number.val;
-        if ((fabs(v)-fabs((long)v)) < 0.000001) { return tp_printf(tp,"%ld",(long)v); }
-        return tp_printf(tp,"%f",v);
+        if ((fabs(v)-fabs((long)v)) < 0.000001) { return _printf(tp,"%ld",(long)v); }
+        return _printf(tp,"%f",v);
     } else if(type == TP_DICT) {
-        return tp_printf(tp,"<dict 0x%x>",self.dict.val);
+        return _printf(tp,"<dict 0x%x>",self.dict.val);
     } else if(type == TP_LIST) {
-        return tp_printf(tp,"<list 0x%x>",self.list.val);
+        return _printf(tp,"<list 0x%x>",self.list.val);
     } else if (type == TP_NONE) {
         return tp_string("None");
     } else if (type == TP_DATA) {
-        return tp_printf(tp,"<data 0x%x>",self.data.val);
+        return _printf(tp,"<data 0x%x>",self.data.val);
     } else if (type == TP_FNC) {
-        return tp_printf(tp,"<fnc 0x%x>",self.fnc.info);
+        return _printf(tp,"<fnc 0x%x>",self.fnc.info);
     }
     return tp_string("<?>");
 }
@@ -38,7 +38,7 @@ tp_obj tp_has(TP,tp_obj self, tp_obj k) {
         if (_tp_dict_find(tp,self.dict.val,k) != -1) { return tp_True; }
         return tp_False;
     } else if (type == TP_STRING && k.type == TP_STRING) {
-        return tp_number(_tp_str_index(self,k)!=-1);
+        return tp_number(_str_ind_(self,k)!=-1);
     } else if (type == TP_LIST) {
         return tp_number(_tp_list_find(tp,self.list.val,k)!=-1);
     }
@@ -109,11 +109,11 @@ tp_obj tp_get(TP,tp_obj self, tp_obj k) {
             if (n >= 0 && n < l) { return tp_string_n(tp->chars[(unsigned char)self.string.val[n]],1); }
         } else if (k.type == TP_STRING) {
             if (tp_cmp(tp,tp_string("join"),k) == 0) {
-                return tp_method(tp,self,tp_join);
+                return tp_method(tp,self,str_join);
             } else if (tp_cmp(tp,tp_string("split"),k) == 0) {
-                return tp_method(tp,self,tp_split);
+                return tp_method(tp,self,strsplit);
             } else if (tp_cmp(tp,tp_string("index"),k) == 0) {
-                return tp_method(tp,self,tp_str_index);
+                return tp_method(tp,self,_str_index);
             } else if (tp_cmp(tp,tp_string("strip"),k) == 0) {
                 return tp_method(tp,self,tp_strip);
             } else if (tp_cmp(tp,tp_string("replace"),k) == 0) {
@@ -138,7 +138,7 @@ tp_obj tp_get(TP,tp_obj self, tp_obj k) {
         if (type == TP_LIST) {
             return tp_list_n(tp,b-a,&self.list.val->items[a]);
         } else if (type == TP_STRING) {
-            return tp_string_sub(tp,self,a,b);
+            return strsub(tp,self,a,b);
         }
     }
 
@@ -191,7 +191,7 @@ tp_obj tp_add(TP,tp_obj a, tp_obj b) {
         return tp_number(a.number.val+b.number.val);
     } else if (a.type == TP_STRING && a.type == b.type) {
         int al = a.string.len, bl = b.string.len;
-        tp_obj r = tp_string_t(tp,al+bl);
+        tp_obj r = to_string(tp,al+bl);
         char *s = r.string.info->s;
         memcpy(s,a.string.val,al); memcpy(s+al,b.string.val,bl);
         return tp_track(tp,r);
@@ -216,10 +216,10 @@ tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
         }
         int al = a.string.len; int n = b.number.val;
         if(n <= 0) {
-            tp_obj r = tp_string_t(tp,0);
+            tp_obj r = to_string(tp,0);
             return tp_track(tp,r);
         }
-        tp_obj r = tp_string_t(tp,al*n);
+        tp_obj r = to_string(tp,al*n);
         char *s = r.string.info->s;
         int i; for (i=0; i<n; i++) { memcpy(s+al*i,a.string.val,al); }
         return tp_track(tp,r);

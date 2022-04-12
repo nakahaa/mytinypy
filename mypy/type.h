@@ -206,7 +206,7 @@ tp_obj tp_str(TP,tp_obj);
 int tp_bool(TP,tp_obj);
 int tp_cmp(TP,tp_obj,tp_obj);
 void _tp_raise(TP,tp_obj);
-tp_obj tp_printf(TP,char const *fmt,...);
+tp_obj _printf(TP,char const *fmt,...);
 tp_obj tp_track(TP,tp_obj);
 void tp_grey(TP,tp_obj);
 tp_obj tp_call(TP, tp_obj fnc, tp_obj params);

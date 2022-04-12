@@ -245,7 +245,7 @@ int tp_step(TP) {
             #endif
             /* RA = tp_string_n((*(cur+1)).string.val,UVBC); */
             int a = (*(cur+1)).string.val-f->code.string.val;
-            RA = tp_string_sub(tp,f->code,a,a+UVBC),
+            RA = strsub(tp,f->code,a,a+UVBC),
             cur += (UVBC/4)+1;
             }
             break;
@@ -274,7 +274,7 @@ int tp_step(TP) {
             int a = (*(cur+1)).string.val-f->code.string.val;
             RA = tp_def(tp,
                 /*tp_string_n((*(cur+1)).string.val,(SVBC-1)*4),*/
-                tp_string_sub(tp,f->code,a,a+(SVBC-1)*4),
+                strsub(tp,f->code,a,a+(SVBC-1)*4),
                 f->globals);
             cur += SVBC; continue;
             }
@@ -292,7 +292,7 @@ int tp_step(TP) {
             #endif
             ;
             int a = (*(cur+1)).string.val-f->code.string.val;
-            f->line = tp_string_sub(tp,f->code,a,a+VA*4-1);
+            f->line = strsub(tp,f->code,a,a+VA*4-1);
             cur += VA; f->lineno = UVBC;
             break;
         case TP_IFILE: f->fname = RA; break;
@@ -336,7 +336,7 @@ tp_obj tp_ez_call(TP, const char *mod, const char *fnc, tp_obj params) {
 tp_obj _tp_import(TP, tp_obj fname, tp_obj name, tp_obj code) {
     tp_obj g;
 
-    if (!((fname.type != TP_NONE && _tp_str_index(fname,tp_string(".tpc"))!=-1) || code.type != TP_NONE)) {
+    if (!((fname.type != TP_NONE && _str_ind_(fname,tp_string(".tpc"))!=-1) || code.type != TP_NONE)) {
         return tp_ez_call(tp,"py2bc","import_fname",tp_params_v(tp,2,fname,name));
     }
 
