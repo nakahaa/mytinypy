@@ -112,7 +112,7 @@ def _dumptree(s, fname):
     visitTree(t, 0)
 
 def visitTree(t, tabs):
-    print(tabs * " ",t.type, t.val)
+    print("{} type={} val={}".format( tabs * " ",t.type, t.val))
     if t.items is None:
         return
 
