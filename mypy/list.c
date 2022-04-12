@@ -72,7 +72,7 @@ _list *new_list(TP) {
 }
 
 ObjType cp_list(TP, ObjType rr) {
-    ObjType val = {TP_LIST};
+    ObjType val = {LISTTYPE};
     _list *o = rr.list.val;
     _list *r = new_list(tp);
     *r = *o; r->gci = 0;
@@ -113,13 +113,13 @@ ObjType extend(TP) {
 }
 
 ObjType list_nt(TP) {
-    ObjType r = {TP_LIST};
+    ObjType r = {LISTTYPE};
     r.list.val = new_list(tp);
     return r;
 }
 
 ObjType to_list(TP) {
-    ObjType r = {TP_LIST};
+    ObjType r = {LISTTYPE};
     r.list.val = new_list(tp);
     return tp_track(tp,r);
 }

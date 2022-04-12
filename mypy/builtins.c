@@ -11,7 +11,7 @@ ObjType tp_print(TP) {
 }
 
 ObjType tp_bind(TP) {
-    ObjType r = TP_TYPE(TP_FNC);
+    ObjType r = TP_TYPE(FUNCTYPE);
     ObjType self = TP_OBJ();
     return tp_fnc_new(tp,
         r.fnc.ftype|2,r.fnc.cfnc,r.fnc.info->code,
@@ -39,9 +39,9 @@ ObjType tp_max(TP) {
 ObjType tp_copy(TP) {
     ObjType r = TP_OBJ();
     int type = r.type;
-    if (type == TP_LIST) {
+    if (type == LISTTYPE) {
         return cp_list(tp,r);
-    } else if (type == TP_DICT) {
+    } else if (type == DICTTYPE) {
         return _tp_dict_copy(tp,r);
     }
     tp_raise(tp_None,tp_string("(tp_copy) TypeError: ?"));
@@ -86,11 +86,11 @@ ObjType tp_istype(TP) {
     ObjType v = TP_OBJ();
     ObjType t = TP_STR();
     if (compare(tp,t,tp_string("string")) == 0) { return tp_number(v.type == TP_STRING); }
-    if (compare(tp,t,tp_string("list")) == 0) { return tp_number(v.type == TP_LIST); }
-    if (compare(tp,t,tp_string("dict")) == 0) { return tp_number(v.type == TP_DICT); }
+    if (compare(tp,t,tp_string("list")) == 0) { return tp_number(v.type == LISTTYPE); }
+    if (compare(tp,t,tp_string("dict")) == 0) { return tp_number(v.type == DICTTYPE); }
     if (compare(tp,t,tp_string("number")) == 0) { return tp_number(v.type == TP_NUMBER); }
-    if (compare(tp,t,tp_string("fnc")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) == 0); }
-    if (compare(tp,t,tp_string("method")) == 0) { return tp_number(v.type == TP_FNC && (v.fnc.ftype&2) != 0); }
+    if (compare(tp,t,tp_string("fnc")) == 0) { return tp_number(v.type == FUNCTYPE && (v.fnc.ftype&2) == 0); }
+    if (compare(tp,t,tp_string("method")) == 0) { return tp_number(v.type == FUNCTYPE && (v.fnc.ftype&2) != 0); }
     tp_raise(tp_None,tp_string("(is_type) TypeError: ?"));
 }
 
@@ -185,8 +185,8 @@ int _tp_lookup_(TP,ObjType self, ObjType k, ObjType *meta, int depth) {
         return 1;
     }
     depth--; if (!depth) { tp_raise(0,tp_string("(tp_lookup) RuntimeError: maximum lookup depth exceeded")); }
-    if (self.dict.dtype && self.dict.val->meta.type == TP_DICT && _tp_lookup_(tp,self.dict.val->meta,k,meta,depth)) {
-        if (self.dict.dtype == 2 && meta->type == TP_FNC) {
+    if (self.dict.dtype && self.dict.val->meta.type == DICTTYPE && _tp_lookup_(tp,self.dict.val->meta,k,meta,depth)) {
+        if (self.dict.dtype == 2 && meta->type == FUNCTYPE) {
             *meta = tp_fnc_new(tp,meta->fnc.ftype|2,
                 meta->fnc.cfnc,meta->fnc.info->code,
                 self,meta->fnc.info->globals);
@@ -209,14 +209,14 @@ int _tp_lookup(TP,ObjType self, ObjType k, ObjType *meta) {
     }
 
 ObjType tp_setmeta(TP) {
-    ObjType self = TP_TYPE(TP_DICT);
-    ObjType meta = TP_TYPE(TP_DICT);
+    ObjType self = TP_TYPE(DICTTYPE);
+    ObjType meta = TP_TYPE(DICTTYPE);
     self.dict.val->meta = meta;
     return tp_None;
 }
 
 ObjType tp_getmeta(TP) {
-    ObjType self = TP_TYPE(TP_DICT);
+    ObjType self = TP_TYPE(DICTTYPE);
     return self.dict.val->meta;
 }
 
@@ -227,7 +227,7 @@ ObjType tp_object(TP) {
 }
 
 ObjType tp_object_new(TP) {
-    ObjType klass = TP_TYPE(TP_DICT);
+    ObjType klass = TP_TYPE(DICTTYPE);
     ObjType self = tp_object(tp);
     self.dict.val->meta = klass;
     TP_META_BEGIN(self,"__init__");
@@ -239,7 +239,7 @@ ObjType tp_object_new(TP) {
 ObjType tp_object_call(TP) {
     ObjType self;
     if (tp->params.list.val->len) {
-        self = TP_TYPE(TP_DICT);
+        self = TP_TYPE(DICTTYPE);
         self.dict.dtype = 2;
     } else {
         self = tp_object(tp);
@@ -249,7 +249,7 @@ ObjType tp_object_call(TP) {
 
 
 ObjType tp_getraw(TP) {
-    ObjType self = TP_TYPE(TP_DICT);
+    ObjType self = TP_TYPE(DICTTYPE);
     self.dict.dtype = 0;
     return self;
 }

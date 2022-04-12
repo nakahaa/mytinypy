@@ -13,7 +13,7 @@
 void compile_code(TP);
 #include "vm.c"
 
-ObjType tp_None = {TP_NONE};
+ObjType tp_None = {NONETYPE};
 
 #if TP_COMPILER
 #include "bc.c"

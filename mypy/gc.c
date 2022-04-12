@@ -2,7 +2,7 @@
 void tp_grey(TP,ObjType v) {
     if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data) { return; }
     *v.gci.data = 1;
-    if (v.type == TP_STRING || v.type == TP_DATA) {
+    if (v.type == TP_STRING || v.type == DATATYPE) {
         app_list(tp,tp->black,v);
         return;
     }
@@ -11,13 +11,13 @@ void tp_grey(TP,ObjType v) {
 
 void tp_follow(TP,ObjType v) {
     int type = v.type;
-    if (type == TP_LIST) {
+    if (type == LISTTYPE) {
         int n;
         for (n=0; n<v.list.val->len; n++) {
             tp_grey(tp,v.list.val->items[n]);
         }
     }
-    if (type == TP_DICT) {
+    if (type == DICTTYPE) {
         int i;
         for (i=0; i<v.dict.val->len; i++) {
             int n = _tp_dict_next(tp,v.dict.val);
@@ -26,7 +26,7 @@ void tp_follow(TP,ObjType v) {
         }
         tp_grey(tp,v.dict.val->meta); 
     }
-    if (type == TP_FNC) {
+    if (type == FUNCTYPE) {
         tp_grey(tp,v.fnc.info->self);
         tp_grey(tp,v.fnc.info->globals);
         tp_grey(tp,v.fnc.info->code);
@@ -59,22 +59,22 @@ void tp_gc_deinit(TP) {
 
 void tp_delete(TP,ObjType v) {
     int type = v.type;
-    if (type == TP_LIST) {
+    if (type == LISTTYPE) {
         free_list(tp, v.list.val);
         return;
-    } else if (type == TP_DICT) {
+    } else if (type == DICTTYPE) {
         _tp_dict_free(tp, v.dict.val);
         return;
     } else if (type == TP_STRING) {
         tp_free(tp, v.string.info);
         return;
-    } else if (type == TP_DATA) {
+    } else if (type == DATATYPE) {
         if (v.data.info->free) {
             v.data.info->free(tp,v);
         }
         tp_free(tp, v.data.info);
         return;
-    } else if (type == TP_FNC) {
+    } else if (type == FUNCTYPE) {
         tp_free(tp, v.fnc.info);
         return;
     }

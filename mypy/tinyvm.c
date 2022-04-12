@@ -80,7 +80,7 @@ void _tp_raise(TP,ObjType e) {
         longjmp(tp->nextexpr,1);
 #endif
     }
-    if (e.type != TP_NONE) { tp->ex = e; }
+    if (e.type != NONETYPE) { tp->ex = e; }
     tp_grey(tp,e);
     longjmp(tp->buf,1);
 }
@@ -120,7 +120,7 @@ void tp_handle(TP) {
 ObjType tp_call(TP,ObjType self, ObjType params) {
     tp->params = params;
 
-    if (self.type == TP_DICT) {
+    if (self.type == DICTTYPE) {
         if (self.dict.dtype == 1) {
             ObjType meta; if (_tp_lookup(tp,self,tp_string("__new__"),&meta)) {
                 insert_list(tp,params.list.val,0,self);
@@ -132,12 +132,12 @@ ObjType tp_call(TP,ObjType self, ObjType params) {
             TP_META_END;
         }
     }
-    if (self.type == TP_FNC && !(self.fnc.ftype&1)) {
+    if (self.type == FUNCTYPE && !(self.fnc.ftype&1)) {
         ObjType r = _tp_tcall(tp,self);
         tp_grey(tp,r);
         return r;
     }
-    if (self.type == TP_FNC) {
+    if (self.type == FUNCTYPE) {
         ObjType dest = tp_None;
         tp_frame(tp,self.fnc.info->globals,self.fnc.info->code,&dest);
         if ((self.fnc.ftype&2)) {
@@ -336,11 +336,11 @@ ObjType tp_ez_call(TP, const char *mod, const char *fnc, ObjType params) {
 ObjType _tp_import(TP, ObjType fname, ObjType name, ObjType code) {
     ObjType g;
 
-    if (!((fname.type != TP_NONE && _str_ind_(fname,tp_string(".tpc"))!=-1) || code.type != TP_NONE)) {
+    if (!((fname.type != NONETYPE && _str_ind_(fname,tp_string(".tpc"))!=-1) || code.type != NONETYPE)) {
         return tp_ez_call(tp,"py2bc","import_fname",tp_params_v(tp,2,fname,name));
     }
 
-    if (code.type == TP_NONE) {
+    if (code.type == NONETYPE) {
         tp_params_v(tp,1,fname);
         code = tp_load(tp);
     }

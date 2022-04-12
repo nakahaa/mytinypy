@@ -30,8 +30,8 @@
 #endif
 
 enum {
-    TP_NONE,TP_NUMBER,TP_STRING,TP_DICT,
-    TP_LIST,TP_FNC,TP_DATA,
+    NONETYPE,TP_NUMBER,TP_STRING,DICTTYPE,
+    LISTTYPE,FUNCTYPE,DATATYPE,
 };
 
 typedef double tp_num;
@@ -307,7 +307,7 @@ ObjType _tp_tcall(TP,ObjType fnc) {
 }
 
 ObjType tp_fnc_new(TP,int t, void *v, ObjType c,ObjType s, ObjType g) {
-    ObjType r = {TP_FNC};
+    ObjType r = {FUNCTYPE};
     _func *info = (_func*)tp_malloc(tp, sizeof(_func));
     info->code = c;
     info->self = s;
@@ -332,7 +332,7 @@ ObjType tp_method(TP,ObjType self,ObjType v(TP)) {
 }
 
 ObjType tp_data(TP,int magic,void *v) {
-    ObjType r = {TP_DATA};
+    ObjType r = {DATATYPE};
     r.data.info = (_tp_data*)tp_malloc(tp, sizeof(_tp_data));
     r.data.val = v;
     r.data.magic = magic;

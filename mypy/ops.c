@@ -5,15 +5,15 @@ ObjType tp_str(TP,ObjType self) {
         tp_num v = self.number.val;
         if ((fabs(v)-fabs((long)v)) < 0.000001) { return _printf(tp,"%ld",(long)v); }
         return _printf(tp,"%f",v);
-    } else if(type == TP_DICT) {
+    } else if(type == DICTTYPE) {
         return _printf(tp,"<dict 0x%x>",self.dict.val);
-    } else if(type == TP_LIST) {
+    } else if(type == LISTTYPE) {
         return _printf(tp,"<list 0x%x>",self.list.val);
-    } else if (type == TP_NONE) {
+    } else if (type == NONETYPE) {
         return tp_string("None");
-    } else if (type == TP_DATA) {
+    } else if (type == DATATYPE) {
         return _printf(tp,"<data 0x%x>",self.data.val);
-    } else if (type == TP_FNC) {
+    } else if (type == FUNCTYPE) {
         return _printf(tp,"<fnc 0x%x>",self.fnc.info);
     }
     return tp_string("<?>");
@@ -23,10 +23,10 @@ ObjType tp_str(TP,ObjType self) {
 int tp_bool(TP,ObjType v) {
     switch(v.type) {
         case TP_NUMBER: return v.number.val != 0;
-        case TP_NONE: return 0;
+        case NONETYPE: return 0;
         case TP_STRING: return v.string.len != 0;
-        case TP_LIST: return v.list.val->len != 0;
-        case TP_DICT: return v.dict.val->len != 0;
+        case LISTTYPE: return v.list.val->len != 0;
+        case DICTTYPE: return v.dict.val->len != 0;
     }
     return 1;
 }
@@ -34,12 +34,12 @@ int tp_bool(TP,ObjType v) {
 
 ObjType tp_has(TP,ObjType self, ObjType k) {
     int type = self.type;
-    if (type == TP_DICT) {
+    if (type == DICTTYPE) {
         if (_tp_dict_find(tp,self.dict.val,k) != -1) { return tp_True; }
         return tp_False;
     } else if (type == TP_STRING && k.type == TP_STRING) {
         return tp_number(_str_ind_(self,k)!=-1);
-    } else if (type == TP_LIST) {
+    } else if (type == LISTTYPE) {
         return tp_number(find_list(tp,self.list.val,k)!=-1);
     }
     tp_raise(tp_None,tp_string("(tp_has) TypeError: iterable argument required"));
@@ -48,7 +48,7 @@ ObjType tp_has(TP,ObjType self, ObjType k) {
 
 void tp_del(TP,ObjType self, ObjType k) {
     int type = self.type;
-    if (type == TP_DICT) {
+    if (type == DICTTYPE) {
         _tp_dict_del(tp,self.dict.val,k,"tp_del");
         return;
     }
@@ -58,8 +58,8 @@ void tp_del(TP,ObjType self, ObjType k) {
 
 ObjType tp_iter(TP,ObjType self, ObjType k) {
     int type = self.type;
-    if (type == TP_LIST || type == TP_STRING) { return tp_get(tp,self,k); }
-    if (type == TP_DICT && k.type == TP_NUMBER) {
+    if (type == LISTTYPE || type == TP_STRING) { return tp_get(tp,self,k); }
+    if (type == DICTTYPE && k.type == TP_NUMBER) {
         return self.dict.val->items[_tp_dict_next(tp,self.dict.val)].key;
     }
     tp_raise(tp_None,tp_string("(tp_iter) TypeError: iteration over non-sequence"));
@@ -69,13 +69,13 @@ ObjType tp_iter(TP,ObjType self, ObjType k) {
 ObjType tp_get(TP,ObjType self, ObjType k) {
     int type = self.type;
     ObjType r;
-    if (type == TP_DICT) {
+    if (type == DICTTYPE) {
         TP_META_BEGIN(self,"__get__");
             return tp_call(tp,meta,tp_params_v(tp,1,k));
         TP_META_END;
         if (self.dict.dtype && _tp_lookup(tp,self,k,&r)) { return r; }
         return _tp_dict_get(tp,self.dict.val,k,"tp_get");
-    } else if (type == TP_LIST) {
+    } else if (type == LISTTYPE) {
         if (k.type == TP_NUMBER) {
             int l = tp_len(tp,self).number.val;
             int n = k.number.val;
@@ -98,7 +98,7 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
                 self.list.val->len=0;
                 return r;
             }
-        } else if (k.type == TP_NONE) {
+        } else if (k.type == NONETYPE) {
             return pop_list(tp,self.list.val,0,"tp_get");
         }
     } else if (type == TP_STRING) {
@@ -122,20 +122,20 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
         }
     }
 
-    if (k.type == TP_LIST) {
+    if (k.type == LISTTYPE) {
         int a,b,l;
         ObjType tmp;
         l = tp_len(tp,self).number.val;
         tmp = tp_get(tp,k,tp_number(0));
         if (tmp.type == TP_NUMBER) { a = tmp.number.val; }
-        else if(tmp.type == TP_NONE) { a = 0; }
+        else if(tmp.type == NONETYPE) { a = 0; }
         else { tp_raise(tp_None,tp_string("(tp_get) TypeError: indices must be numbers")); }
         tmp = tp_get(tp,k,tp_number(1));
         if (tmp.type == TP_NUMBER) { b = tmp.number.val; }
-        else if(tmp.type == TP_NONE) { b = l; }
+        else if(tmp.type == NONETYPE) { b = l; }
         else { tp_raise(tp_None,tp_string("(tp_get) TypeError: indices must be numbers")); }
         a = _tp_max(0,(a<0?l+a:a)); b = _tp_min(l,(b<0?l+b:b));
-        if (type == TP_LIST) {
+        if (type == LISTTYPE) {
             return to_list_n(tp,b-a,&self.list.val->items[a]);
         } else if (type == TP_STRING) {
             return strsub(tp,self,a,b);
@@ -146,14 +146,14 @@ ObjType tp_get(TP,ObjType self, ObjType k) {
 }
 
 int tp_iget(TP,ObjType *r, ObjType self, ObjType k) {
-    if (self.type == TP_DICT) {
+    if (self.type == DICTTYPE) {
         int n = _tp_dict_find(tp,self.dict.val,k);
         if (n == -1) { return 0; }
         *r = self.dict.val->items[n].val;
         tp_grey(tp,*r);
         return 1;
     }
-    if (self.type == TP_LIST && !self.list.val->len) { return 0; }
+    if (self.type == LISTTYPE && !self.list.val->len) { return 0; }
     *r = tp_get(tp,self,k); tp_grey(tp,*r);
     return 1;
 }
@@ -162,18 +162,18 @@ int tp_iget(TP,ObjType *r, ObjType self, ObjType k) {
 void tp_set(TP,ObjType self, ObjType k, ObjType v) {
     int type = self.type;
 
-    if (type == TP_DICT) {
+    if (type == DICTTYPE) {
         TP_META_BEGIN(self,"__set__");
             tp_call(tp,meta,tp_params_v(tp,2,k,v));
             return;
         TP_META_END;
         _tp_dict_set(tp,self.dict.val,k,v);
         return;
-    } else if (type == TP_LIST) {
+    } else if (type == LISTTYPE) {
         if (k.type == TP_NUMBER) {
             set_list(tp,self.list.val,k.number.val,v,"tp_set");
             return;
-        } else if (k.type == TP_NONE) {
+        } else if (k.type == NONETYPE) {
             append_list(tp,self.list.val,v);
             return;
         } else if (k.type == TP_STRING) {
@@ -195,7 +195,7 @@ ObjType tp_add(TP,ObjType a, ObjType b) {
         char *s = r.string.info->s;
         memcpy(s,a.string.val,al); memcpy(s+al,b.string.val,bl);
         return tp_track(tp,r);
-    } else if (a.type == TP_LIST && a.type == b.type) {
+    } else if (a.type == LISTTYPE && a.type == b.type) {
         ObjType r;
         tp_params_v(tp,1,a);
         r = tp_copy(tp);
@@ -231,9 +231,9 @@ ObjType tp_len(TP,ObjType self) {
     int type = self.type;
     if (type == TP_STRING) {
         return tp_number(self.string.len);
-    } else if (type == TP_DICT) {
+    } else if (type == DICTTYPE) {
         return tp_number(self.dict.val->len);
-    } else if (type == TP_LIST) {
+    } else if (type == LISTTYPE) {
         return tp_number(self.list.val->len);
     }
     
@@ -243,7 +243,7 @@ ObjType tp_len(TP,ObjType self) {
 int compare(TP,ObjType a, ObjType b) {
     if (a.type != b.type) { return a.type-b.type; }
     switch(a.type) {
-        case TP_NONE: return 0;
+        case NONETYPE: return 0;
         case TP_NUMBER: return _tp_sign(a.number.val-b.number.val);
         case TP_STRING: {
             int l = _tp_min(a.string.len,b.string.len);
@@ -253,16 +253,16 @@ int compare(TP,ObjType a, ObjType b) {
             }
             return v;
         }
-        case TP_LIST: {
+        case LISTTYPE: {
             int n,v; for(n=0;n<_tp_min(a.list.val->len,b.list.val->len);n++) {
         ObjType aa = a.list.val->items[n]; ObjType bb = b.list.val->items[n];
-            if (aa.type == TP_LIST && bb.type == TP_LIST) { v = aa.list.val-bb.list.val; } else { v = compare(tp,aa,bb); }
+            if (aa.type == LISTTYPE && bb.type == LISTTYPE) { v = aa.list.val-bb.list.val; } else { v = compare(tp,aa,bb); }
             if (v) { return v; } }
             return a.list.val->len-b.list.val->len;
         }
-        case TP_DICT: return a.dict.val - b.dict.val;
-        case TP_FNC: return a.fnc.info - b.fnc.info;
-        case TP_DATA: return (char*)a.data.val - (char*)b.data.val;
+        case DICTTYPE: return a.dict.val - b.dict.val;
+        case FUNCTYPE: return a.fnc.info - b.fnc.info;
+        case DATATYPE: return (char*)a.data.val - (char*)b.data.val;
     }
     tp_raise(0,tp_string("(compare) TypeError: ?"));
 }
