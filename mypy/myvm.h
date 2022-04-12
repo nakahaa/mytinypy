@@ -40,7 +40,7 @@ VmType *_vm_init(void)
     set(tp, sys, mkstring("version"), mkstring("tinypy 1.2+SVN"));
     set(tp, tp->modules, mkstring("sys"), sys);
     tp->regs = tp->_regs.list.val->items;
-    tp_full(tp);
+    fullFunc(tp);
     return tp;
 }
 
@@ -50,10 +50,10 @@ void deinit(TP)
     {
         pop_list(tp, tp->root.list.val, 0, "deinit");
     }
-    tp_full(tp);
-    tp_full(tp);
-    tp_delete(tp, tp->root);
-    tp_gc_deinit(tp);
+    fullFunc(tp);
+    fullFunc(tp);
+    deleteFunc(tp, tp->root);
+    gc_deinit(tp);
     tp->mem_used -= sizeof(VmType);
     free(tp);
 }
@@ -103,7 +103,7 @@ void raise(TP, ObjType e)
     {
         tp->ex = e;
     }
-    tp_grey(tp, e);
+    greyFunc(tp, e);
     longjmp(tp->buf, 1);
 }
 
@@ -181,7 +181,7 @@ ObjType callfunc(TP, ObjType self, ObjType params)
     if (self.type == FUNCTYPE && !(self.fnc.ftype & 1))
     {
         ObjType r = _tp_tcall(tp, self);
-        tp_grey(tp, r);
+        greyFunc(tp, r);
         return r;
     }
     if (self.type == FUNCTYPE)
@@ -211,7 +211,7 @@ void returnFunc(TP, ObjType v)
     if (dest)
     {
         *dest = v;
-        tp_grey(tp, v);
+        greyFunc(tp, v);
     }
     memset(tp->frames[tp->cur].regs - TP_REGS_EXTRA, 0, (TP_REGS_EXTRA + tp->frames[tp->cur].cregs) * sizeof(ObjType));
     tp->cur -= 1;
@@ -279,7 +279,7 @@ enum
 #define RC regs[e.regs.c]
 #define UVBC (unsigned short)(((VB << 8) + VC))
 #define SVBC (short)(((VB << 8) + VC))
-#define GA tp_grey(tp, RA)
+#define GA greyFunc(tp, RA)
 #define SR(v)     \
     f->cur = cur; \
     return (v);
@@ -627,7 +627,7 @@ void tp_builtins(TP)
         {"len", lenFunc},
         {"assert", assertFunc},
         {"str", tp_str2},
-        {"float", tp_float},
+        {"float", mkfloat},
         {"system", sysFunc},
         {"istype", isTypeFunc},
         {"chr", tp_chr},
@@ -639,8 +639,8 @@ void tp_builtins(TP)
         {"exec", tp_exec_},
         {"exists", existFunc},
         {"mtime", mtimeFunc},
-        {"number", tp_float},
-        {"round", tp_round},
+        {"number", mkfloat},
+        {"round", roundfunc},
         {"ord", tp_ord},
         {"merge", tp_merge},
         {"getraw", getrawFunc},

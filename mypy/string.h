@@ -11,7 +11,7 @@ ObjType str_cp(TP, const char *s, int n)
 {
     ObjType r = to_string(tp, n);
     memcpy(r.string.info->s, s, n);
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType strsub(TP, ObjType s, int a, int b)
@@ -39,7 +39,7 @@ ObjType _printf(TP, char const *fmt, ...)
     va_start(arg, fmt);
     vsprintf(s, fmt, arg);
     va_end(arg);
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 int _str_ind_(ObjType s, ObjType k)
@@ -86,7 +86,7 @@ ObjType str_join(TP)
         memcpy(s + l, e.string.val, e.string.len);
         l += e.string.len;
     }
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType strsplit(TP)
@@ -170,7 +170,7 @@ ObjType tp_strip(TP)
     r = to_string(tp, b - a);
     s = r.string.info->s;
     memcpy(s, v + a, b - a);
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType tp_replace(TP)
@@ -211,5 +211,5 @@ ObjType tp_replace(TP)
     }
     memcpy(d, z.string.val, (s.string.val + s.string.len) - z.string.val);
 
-    return tp_track(tp, rr);
+    return track(tp, rr);
 }

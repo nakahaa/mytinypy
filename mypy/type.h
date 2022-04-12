@@ -241,8 +241,8 @@ int mk_bool(TP, ObjType);
 int compare(TP, ObjType, ObjType);
 void raise(TP, ObjType);
 ObjType _printf(TP, char const *fmt, ...);
-ObjType tp_track(TP, ObjType);
-void tp_grey(TP, ObjType);
+ObjType track(TP, ObjType);
+void greyFunc(TP, ObjType);
 ObjType callfunc(TP, ObjType fnc, ObjType params);
 ObjType add(TP, ObjType a, ObjType b);
 
@@ -354,7 +354,7 @@ ObjType tp_fnc_new(TP, int t, void *v, ObjType c, ObjType s, ObjType g)
     r.fnc.ftype = t;
     r.fnc.info = info;
     r.fnc.cfnc = v;
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType tp_def(TP, ObjType code, ObjType g)
@@ -379,7 +379,7 @@ ObjType tp_data(TP, int magic, void *v)
     r.data.info = (_tp_data *)tp_malloc(tp, sizeof(_tp_data));
     r.data.val = v;
     r.data.magic = magic;
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType tp_params(TP)

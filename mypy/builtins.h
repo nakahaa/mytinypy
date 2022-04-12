@@ -149,7 +149,7 @@ ObjType isTypeFunc(TP)
     tp_raise(NONE, mkstring("(is_type) TypeError: ?"));
 }
 
-ObjType tp_float(TP)
+ObjType mkfloat(TP)
 {
     ObjType v = TP_OBJ();
     int ord = TP_DEFAULT(number(0)).number.val;
@@ -169,7 +169,7 @@ ObjType tp_float(TP)
         }
         return (number(strtol(s, 0, ord)));
     }
-    tp_raise(NONE, mkstring("(tp_float) TypeError: ?"));
+    tp_raise(NONE, mkstring("(mkfloat) TypeError: ?"));
 }
 
 ObjType saveFunc(TP)
@@ -208,7 +208,7 @@ ObjType loadFunc(TP)
     s = r.string.info->s;
     fread(s, 1, l, f);
     fclose(f);
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType fpackFunc(TP)
@@ -216,16 +216,16 @@ ObjType fpackFunc(TP)
     tp_num v = TP_NUM();
     ObjType r = to_string(tp, sizeof(tp_num));
     *(tp_num *)r.string.val = v;
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType absFunc(TP)
 {
-    return number(fabs(tp_float(tp).number.val));
+    return number(fabs(mkfloat(tp).number.val));
 }
 ObjType intFunc(TP)
 {
-    return number((long)tp_float(tp).number.val);
+    return number((long)mkfloat(tp).number.val);
 }
 tp_num roundfFunc(tp_num v)
 {
@@ -234,9 +234,9 @@ tp_num roundfFunc(tp_num v)
     av = (av - iv < 0.5 ? iv : iv + 1);
     return (v < 0 ? -av : av);
 }
-ObjType tp_round(TP)
+ObjType roundfunc(TP)
 {
-    return number(roundfFunc(tp_float(tp).number.val));
+    return number(roundfFunc(mkfloat(tp).number.val));
 }
 
 ObjType existFunc(TP)
@@ -259,7 +259,7 @@ ObjType mtimeFunc(TP)
     tp_raise(NONE, mkstring("(mtimeFunc) IOError: ?"));
 }
 
-int _tp_lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
+int _lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
 {
     int n = _tp_dict_find(tp, self.dict.val, k);
     if (n != -1)
@@ -272,7 +272,7 @@ int _tp_lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
     {
         tp_raise(0, mkstring("(tp_lookup) RuntimeError: maximum lookup depth exceeded"));
     }
-    if (self.dict.dtype && self.dict.val->meta.type == DICTTYPE && _tp_lookup_(tp, self.dict.val->meta, k, meta, depth))
+    if (self.dict.dtype && self.dict.val->meta.type == DICTTYPE && _lookup_(tp, self.dict.val->meta, k, meta, depth))
     {
         if (self.dict.dtype == 2 && meta->type == FUNCTYPE)
         {
@@ -287,7 +287,7 @@ int _tp_lookup_(TP, ObjType self, ObjType k, ObjType *meta, int depth)
 
 int lookupFunc(TP, ObjType self, ObjType k, ObjType *meta)
 {
-    return _tp_lookup_(tp, self, k, meta, 8);
+    return _lookup_(tp, self, k, meta, 8);
 }
 
 #define TP_META_BEGIN(self, name)                         \

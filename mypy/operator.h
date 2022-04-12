@@ -254,7 +254,7 @@ int iget(TP, ObjType *r, ObjType self, ObjType k)
             return 0;
         }
         *r = self.dict.val->items[n].val;
-        tp_grey(tp, *r);
+        greyFunc(tp, *r);
         return 1;
     }
     if (self.type == LISTTYPE && !self.list.val->len)
@@ -262,7 +262,7 @@ int iget(TP, ObjType *r, ObjType self, ObjType k)
         return 0;
     }
     *r = get(tp, self, k);
-    tp_grey(tp, *r);
+    greyFunc(tp, *r);
     return 1;
 }
 
@@ -317,7 +317,7 @@ ObjType add(TP, ObjType a, ObjType b)
         char *s = r.string.info->s;
         memcpy(s, a.string.val, al);
         memcpy(s + al, b.string.val, bl);
-        return tp_track(tp, r);
+        return track(tp, r);
     }
     else if (a.type == LISTTYPE && a.type == b.type)
     {
@@ -351,7 +351,7 @@ ObjType tp_mul(TP, ObjType a, ObjType b)
         if (n <= 0)
         {
             ObjType r = to_string(tp, 0);
-            return tp_track(tp, r);
+            return track(tp, r);
         }
         ObjType r = to_string(tp, al * n);
         char *s = r.string.info->s;
@@ -360,7 +360,7 @@ ObjType tp_mul(TP, ObjType a, ObjType b)
         {
             memcpy(s + al * i, a.string.val, al);
         }
-        return tp_track(tp, r);
+        return track(tp, r);
     }
     tp_raise(NONE, mkstring("(tp_mul) TypeError: ?"));
 }

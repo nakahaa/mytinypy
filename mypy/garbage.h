@@ -1,5 +1,5 @@
 
-void tp_grey(TP, ObjType v)
+void greyFunc(TP, ObjType v)
 {
     if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data)
     {
@@ -14,7 +14,7 @@ void tp_grey(TP, ObjType v)
     app_list(tp, tp->grey, v);
 }
 
-void tp_follow(TP, ObjType v)
+void followFunc(TP, ObjType v)
 {
     int type = v.type;
     if (type == LISTTYPE)
@@ -22,7 +22,7 @@ void tp_follow(TP, ObjType v)
         int n;
         for (n = 0; n < v.list.val->len; n++)
         {
-            tp_grey(tp, v.list.val->items[n]);
+            greyFunc(tp, v.list.val->items[n]);
         }
     }
     if (type == DICTTYPE)
@@ -31,20 +31,20 @@ void tp_follow(TP, ObjType v)
         for (i = 0; i < v.dict.val->len; i++)
         {
             int n = _tp_dict_next(tp, v.dict.val);
-            tp_grey(tp, v.dict.val->items[n].key);
-            tp_grey(tp, v.dict.val->items[n].val);
+            greyFunc(tp, v.dict.val->items[n].key);
+            greyFunc(tp, v.dict.val->items[n].val);
         }
-        tp_grey(tp, v.dict.val->meta);
+        greyFunc(tp, v.dict.val->meta);
     }
     if (type == FUNCTYPE)
     {
-        tp_grey(tp, v.fnc.info->self);
-        tp_grey(tp, v.fnc.info->globals);
-        tp_grey(tp, v.fnc.info->code);
+        greyFunc(tp, v.fnc.info->self);
+        greyFunc(tp, v.fnc.info->globals);
+        greyFunc(tp, v.fnc.info->code);
     }
 }
 
-void tp_reset(TP)
+void resetFunc(TP)
 {
     int n;
     _list *tmp;
@@ -65,14 +65,14 @@ void gc_vm_init(TP)
     tp->steps = 0;
 }
 
-void tp_gc_deinit(TP)
+void gc_deinit(TP)
 {
     free_list(tp, tp->white);
     free_list(tp, tp->grey);
     free_list(tp, tp->black);
 }
 
-void tp_delete(TP, ObjType v)
+void deleteFunc(TP, ObjType v)
 {
     int type = v.type;
     if (type == LISTTYPE)
@@ -104,10 +104,10 @@ void tp_delete(TP, ObjType v)
         tp_free(tp, v.fnc.info);
         return;
     }
-    tp_raise(, mkstring("(tp_delete) TypeError: ?"));
+    tp_raise(, mkstring("(deleteFunc) TypeError: ?"));
 }
 
-void tp_collect(TP)
+void collectFunc(TP)
 {
     int n;
     for (n = 0; n < tp->white->len; n++)
@@ -117,54 +117,54 @@ void tp_collect(TP)
         {
             continue;
         }
-        tp_delete(tp, r);
+        deleteFunc(tp, r);
     }
     tp->white->len = 0;
-    tp_reset(tp);
+    resetFunc(tp);
 }
 
-void _tp_gcinc(TP)
+void _gcinc(TP)
 {
     ObjType v;
     if (!tp->grey->len)
     {
         return;
     }
-    v = pop_list(tp, tp->grey, tp->grey->len - 1, "_tp_gcinc");
-    tp_follow(tp, v);
+    v = pop_list(tp, tp->grey, tp->grey->len - 1, "_gcinc");
+    followFunc(tp, v);
     app_list(tp, tp->black, v);
 }
 
-void tp_full(TP)
+void fullFunc(TP)
 {
     while (tp->grey->len)
     {
-        _tp_gcinc(tp);
+        _gcinc(tp);
     }
-    tp_collect(tp);
-    tp_follow(tp, tp->root);
+    collectFunc(tp);
+    followFunc(tp, tp->root);
 }
 
-void tp_gcinc(TP)
+void gcincFunc(TP)
 {
     tp->steps += 1;
     if (tp->steps < TP_GCMAX || tp->grey->len > 0)
     {
-        _tp_gcinc(tp);
-        _tp_gcinc(tp);
+        _gcinc(tp);
+        _gcinc(tp);
     }
     if (tp->steps < TP_GCMAX || tp->grey->len > 0)
     {
         return;
     }
     tp->steps = 0;
-    tp_full(tp);
+    fullFunc(tp);
     return;
 }
 
-ObjType tp_track(TP, ObjType v)
+ObjType track(TP, ObjType v)
 {
-    tp_gcinc(tp);
-    tp_grey(tp, v);
+    gcincFunc(tp);
+    greyFunc(tp, v);
     return v;
 }

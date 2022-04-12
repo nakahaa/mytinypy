@@ -150,8 +150,8 @@ void _tp_dict_setx(TP, _dict *self, ObjType k, ObjType v)
 void _tp_dict_set(TP, _dict *self, ObjType k, ObjType v)
 {
     _tp_dict_setx(tp, self, k, v);
-    tp_grey(tp, k);
-    tp_grey(tp, v);
+    greyFunc(tp, k);
+    greyFunc(tp, v);
 }
 
 ObjType _tp_dict_get(TP, _dict *self, ObjType k, const char *error)
@@ -191,7 +191,7 @@ ObjType _tp_dict_copy(TP, ObjType rr)
     memcpy(r->items, o->items, sizeof(ItemType) * o->alloc);
     obj.dict.val = r;
     obj.dict.dtype = 1;
-    return tp_track(tp, obj);
+    return track(tp, obj);
 }
 
 int _tp_dict_next(TP, _dict *self)
@@ -229,7 +229,7 @@ ObjType tp_dict(TP)
     ObjType r = {DICTTYPE};
     r.dict.val = _tp_dict_new(tp);
     r.dict.dtype = 1;
-    return tp ? tp_track(tp, r) : r;
+    return tp ? track(tp, r) : r;
 }
 
 ObjType dict_n(TP, int n, ObjType *argv)
@@ -260,7 +260,7 @@ void set_list(TP, _list *self, int k, ObjType v, const char *error)
         tp_raise(, mkstring("(set_list) KeyError"));
     }
     self->items[k] = v;
-    tp_grey(tp, v);
+    greyFunc(tp, v);
 }
 void free_list(TP, _list *self)
 {
@@ -296,7 +296,7 @@ void app_list(TP, _list *self, ObjType v)
 void insert_list(TP, _list *self, int n, ObjType v)
 {
     insertx_list(tp, self, n, v);
-    tp_grey(tp, v);
+    greyFunc(tp, v);
 }
 void append_list(TP, _list *self, ObjType v)
 {
@@ -353,7 +353,7 @@ ObjType cp_list(TP, ObjType rr)
     r->items = (ObjType *)tp_malloc(tp, sizeof(ObjType) * o->len);
     memcpy(r->items, o->items, sizeof(ObjType) * o->len);
     val.list.val = r;
-    return tp_track(tp, val);
+    return track(tp, val);
 }
 
 ObjType append(TP)
@@ -402,7 +402,7 @@ ObjType to_list(TP)
 {
     ObjType r = {LISTTYPE};
     r.list.val = new_list(tp);
-    return tp_track(tp, r);
+    return track(tp, r);
 }
 
 ObjType list_n(TP, int n, ObjType *argv)
