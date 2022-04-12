@@ -1,7 +1,3 @@
-/* File: VM
- * Functionality pertaining to the virtual machine.
- */
-
 tp_vm *_tp_init(void) {
     int i;
     tp_vm *tp = (tp_vm*)calloc(sizeof(tp_vm),1);
@@ -38,14 +34,6 @@ tp_vm *_tp_init(void) {
     return tp;
 }
 
-
-/* Function: tp_deinit
- * Destroys a VM instance.
- * 
- * When you no longer need an instance of tinypy, you can use this to free all
- * memory used by it. Even when you are using only a single tinypy instance, it
- * may be good practice to call this function on shutdown.
- */
 void tp_deinit(TP) {
     while (tp->root.list.val->len) {
         _tp_list_pop(tp,tp->root.list.val,0,"tp_deinit");
@@ -57,14 +45,12 @@ void tp_deinit(TP) {
     free(tp);
 }
 
-/* tp_frame_*/
 void tp_frame(TP,tp_obj globals,tp_obj code,tp_obj *ret_dest) {
     tp_frame_ f;
     f.globals = globals;
     f.code = code;
     f.cur = (tp_code*)f.code.string.val;
     f.jmp = 0;
-/*     fprintf(stderr,"tp->cur: %d\n",tp->cur);*/
     f.regs = (tp->cur <= 0?tp->regs:tp->frames[tp->cur].regs+tp->frames[tp->cur].cregs);
     
     f.regs[0] = f.globals;
@@ -77,7 +63,6 @@ void tp_frame(TP,tp_obj globals,tp_obj code,tp_obj *ret_dest) {
     f.name = tp_string("?");
     f.fname = tp_string("?");
     f.cregs = 0;
-/*     return f;*/
     if (f.regs+(256+TP_REGS_EXTRA) >= tp->regs+TP_REGS || tp->cur >= TP_FRAMES-1) {
         tp_raise(,tp_string("(tp_frame) RuntimeError: stack overflow"));
     }
@@ -86,7 +71,6 @@ void tp_frame(TP,tp_obj globals,tp_obj code,tp_obj *ret_dest) {
 }
 
 void _tp_raise(TP,tp_obj e) {
-    /*char *x = 0; x[0]=0;*/
     if (!tp || !tp->jmp) {
 #ifndef CPYTHON_MOD
         printf("\nException:\n"); tp_echo(tp,e); printf("\n");
@@ -133,26 +117,7 @@ void tp_handle(TP) {
 #endif
 }
 
-/* Function: tp_call
- * Calls a tinypy function.
- *
- * Use this to call a tinypy function.
- *
- * Parameters:
- * tp - The VM instance.
- * self - The object to call.
- * params - Parameters to pass.
- *
- * Example:
- * > tp_call(tp,
- * >     tp_get(tp, tp->builtins, tp_string("foo")),
- * >     tp_params_v(tp, tp_string("hello")))
- * This will look for a global function named "foo", then call it with a single
- * positional parameter containing the string "hello".
- */
 tp_obj tp_call(TP,tp_obj self, tp_obj params) {
-    /* I'm not sure we should have to do this, but
-    just for giggles we will. */
     tp->params = params;
 
     if (self.type == TP_DICT) {
@@ -192,8 +157,6 @@ tp_obj tp_call(TP,tp_obj self, tp_obj params) {
 void tp_return(TP, tp_obj v) {
     tp_obj *dest = tp->frames[tp->cur].ret_dest;
     if (dest) { *dest = v; tp_grey(tp,v); }
-/*     memset(tp->frames[tp->cur].regs,0,TP_REGS_PER_FRAME*sizeof(tp_obj));
-       fprintf(stderr,"regs:%d\n",(tp->frames[tp->cur].cregs+1));*/
     memset(tp->frames[tp->cur].regs-TP_REGS_EXTRA,0,(TP_REGS_EXTRA+tp->frames[tp->cur].cregs)*sizeof(tp_obj));
     tp->cur -= 1;
 }
@@ -207,14 +170,6 @@ enum {
     TP_INOT, TP_IBITNOT,
     TP_ITOTAL
 };
-
-/* char *tp_strings[TP_ITOTAL] = {
-       "EOF","ADD","SUB","MUL","DIV","POW","BITAND","BITOR","CMP","GET","SET","NUM",
-       "STR","GGET","GSET","MOVE","DEF","PASS","JUMP","CALL","RETURN","IF","DEBUG",
-       "EQ","LE","LT","DICT","LIST","NONE","LEN","LINE","PARAMS","IGET","FILE",
-       "NAME","NE","HAS","RAISE","SETJMP","MOD","LSH","RSH","ITER","DEL","REGS",
-       "BITXOR", "IFN", "NOT", "BITNOT",
-   };*/
 
 #define VA ((int)e.regs.a)
 #define VB ((int)e.regs.b)
@@ -237,10 +192,7 @@ int tp_step(TP) {
     tp_bounds(tp,cur,1);
     #endif
     tp_code e = *cur;
-    /*
-     fprintf(stderr,"%2d.%4d: %-6s %3d %3d %3d\n",tp->cur,cur - (tp_code*)f->code.string.val,tp_strings[e.i],VA,VB,VC);
-       int i; for(i=0;i<16;i++) { fprintf(stderr,"%d: %s\n",i,TP_xSTR(regs[i])); }
-    */
+
     switch (e.i) {
         case TP_IEOF: tp_return(tp,tp_None); SR(0); break;
         case TP_IADD: RA = tp_add(tp,RB,RC); break;
@@ -316,7 +268,6 @@ int tp_step(TP) {
             break;
         case TP_IGSET: tp_set(tp,f->globals,RA,RB); break;
         case TP_IDEF: {
-/*            RA = tp_def(tp,(*(cur+1)).string.val,f->globals);*/
             #ifdef TP_SANDBOX
             tp_bounds(tp,cur,SVBC);
             #endif
@@ -341,9 +292,7 @@ int tp_step(TP) {
             #endif
             ;
             int a = (*(cur+1)).string.val-f->code.string.val;
-/*            f->line = tp_string_n((*(cur+1)).string.val,VA*4-1);*/
             f->line = tp_string_sub(tp,f->code,a,a+VA*4-1);
-/*             fprintf(stderr,"%7d: %s\n",UVBC,f->line.string.val);*/
             cur += VA; f->lineno = UVBC;
             break;
         case TP_IFILE: f->fname = RA; break;
@@ -408,19 +357,6 @@ tp_obj _tp_import(TP, tp_obj fname, tp_obj name, tp_obj code) {
     return g;
 }
 
-
-/* Function: tp_import
- * Imports a module.
- * 
- * Parameters:
- * fname - The filename of a file containing the module's code.
- * name - The name of the module.
- * codes - The module's code.  If this is given, fname is ignored.
- * len - The length of the bytecode.
- *
- * Returns:
- * The module object.
- */
 tp_obj tp_import(TP, const char * fname, const char * name, void *codes, int len) {
     tp_obj f = fname?tp_string(fname):tp_None;
     tp_obj bc = codes?tp_string_n((const char*)codes,len):tp_None;
@@ -492,17 +428,10 @@ tp_obj tp_main(TP,char *fname, void *code, int len) {
     return tp_import(tp,fname,"__main__",code, len);
 }
 
-/* Function: tp_compile
- * Compile some tinypy code.
- *
- */
 tp_obj tp_compile(TP, tp_obj text, tp_obj fname) {
     return tp_ez_call(tp,"BUILTINS","compile",tp_params_v(tp,2,text,fname));
 }
 
-/* Function: tp_exec
- * Execute VM code.
- */
 tp_obj tp_exec(TP, tp_obj code, tp_obj globals) {
     tp_obj r=tp_None;
     tp_frame(tp,globals,code,&r);
@@ -515,15 +444,6 @@ tp_obj tp_eval(TP, const char *text, tp_obj globals) {
     return tp_exec(tp,code,globals);
 }
 
-/* Function: tp_init
- * Initializes a new virtual machine.
- *
- * The given parameters have the same format as the parameters to main, and
- * allow passing arguments to your tinypy scripts.
- *
- * Returns:
- * The newly created tinypy instance.
- */
 tp_vm *tp_init(int argc, char *argv[]) {
     tp_vm *tp = _tp_init();
     tp_builtins(tp);
@@ -531,5 +451,3 @@ tp_vm *tp_init(int argc, char *argv[]) {
     tp_compiler(tp);
     return tp;
 }
-
-/**/

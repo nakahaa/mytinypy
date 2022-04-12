@@ -85,6 +85,7 @@ def import_fname(fname,name):
     s = load(fname)
     code = _compile(s,fname)
     g['__code__'] = code
+    print(code)
     exec(code,g)
     return g
 
