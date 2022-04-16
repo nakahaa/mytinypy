@@ -44,6 +44,7 @@ VmType *_vm_init(void)
     return tp;
 }
 
+// 准备 py 虚拟机
 void deinit(TP)
 {
     while (tp->root.list.val->len)
@@ -156,6 +157,7 @@ void handle(TP)
 #endif
 }
 
+// callfunc -> runFunc -> _run -> -> stepFunc （定义了各种目标代码如何执行）
 ObjType callfunc(TP, ObjType self, ObjType params)
 {
     tp->params = params;
@@ -295,7 +297,8 @@ int stepFunc(TP)
         tp_bounds(tp, cur, 1);
 #endif
         CodeType e = *cur;
-
+        
+        // 判断目标代码的类型，执行相应的函数
         switch (e.i)
         {
         case TP_IEOF:

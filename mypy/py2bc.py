@@ -135,7 +135,9 @@ def _compile(s, fname):
 
 def genTokens(src):
     print("----------------------gen tokens--------------------------")
+    # 打开 src 文件
     s = load(src)
+    # 实际上调用 tokenize.py 内部的方法
     tokens = tokenize.tokenize(s)
     for token in tokens:
         print(token.pos, token.type, token.val )
@@ -148,14 +150,14 @@ def genCode(src):
         print( code )
 
 if __name__ == '__main__':
+    # 输出 目标代码
     if sys.argv[2] == "gencode":
         genCode(sys.argv[1])
 
-    if sys.argv[2] == "dumpCode":
-        main(sys.argv[1], "tmpCode")
-
+    # 输出 语法分析树
     if sys.argv[2] == "dumptree":
         dumptrees(sys.argv[1])
 
+    # 输出 词法分析流
     if sys.argv[2] == "gentokens":
         genTokens(sys.argv[1])

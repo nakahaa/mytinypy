@@ -1,3 +1,4 @@
+# 定义子类，
 # definition of superclass "Triangles"
 class Triangles(object):
       
@@ -26,8 +27,7 @@ class Triangles(object):
         return 'Name: '+self.name+'\nDimensions: '+str(self.s1)+','+str(self.s2)+','+str(self.s3)
       
       
-# describing a subclass 
-# inherits from Triangles
+# peri 继承 triangles
 class Peri(Triangles):
       
     # function to calculate the area     

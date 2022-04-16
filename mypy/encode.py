@@ -367,7 +367,7 @@ def _do_none(r=None):
     code(NONE, r)
     return r
 
-
+# 对应 python 里面 符号，一个总入口
 def do_symbol(t, r=None):
     sets = ['=']
     isets = ['+=', '-=', '*=', '/=', '|=', '&=', '^=']
@@ -504,7 +504,7 @@ def p_filter(items):
             a.append(t)
     return a, b, c, d
 
-
+# 对应 python 里面 import， 导入包
 def do_import(t):
     for mod in t.items:
         mod.type = 'string'
@@ -514,7 +514,7 @@ def do_import(t):
         mod.type = 'name'
         do_set_ctx(mod, Token(t.pos, 'reg', v))
 
-
+# 对应 python 里面 from 
 def do_from(t):
     mod = t.items[0]
     mod.type = 'string'
@@ -535,13 +535,14 @@ def do_from(t):
             Token(t.pos, 'get', None, [Token(t.pos, 'reg', v), item])
         ))  # REG
 
-
+# 对应 python 里面 全局变量
 def do_globals(t):
     for t in t.items:
         if t.val not in D.globals:
             D.globals.append(t.val)
 
 
+# 对应 python 里面 del
 def do_del(tt):
     for t in tt.items:
         r = do(t.items[0])
@@ -550,7 +551,7 @@ def do_del(tt):
         free_tmp(r)
         free_tmp(r2)  # REG
 
-
+# 对应 python 里面 调用
 def do_call(t, r=None):
     r = get_tmp(r)
     items = t.items
@@ -583,7 +584,7 @@ def do_call(t, r=None):
     free_tmp(fnc)  # REG
     return r
 
-
+# 对应 python 里面  name
 def do_name(t, r=None):
     if t.val in D.vars:
         return do_local(t, r)
@@ -596,6 +597,7 @@ def do_name(t, r=None):
     return r
 
 
+# 对应 python 里面  局部变量
 def do_local(t, r=None):
     if t.val in D.rglobals:
         D.error = True
@@ -605,6 +607,7 @@ def do_local(t, r=None):
     return get_reg(t.val)
 
 
+# 对应 python 里面 函数def 定义
 def do_def(tok, kls=None):
     items = tok.items
 
@@ -654,7 +657,7 @@ def do_def(tok, kls=None):
 
     free_tmp(rf)
 
-
+# 对应 python 里面 class
 def do_class(t):
     tok = t
     items = t.items
@@ -687,7 +690,7 @@ def do_class(t):
 
     free_reg(kls)  # REG
 
-
+# 对应 python 里面 class
 def do_classvar(t, r):
     var = do_string(t.items[0])
     val = do(t.items[1])
@@ -696,6 +699,7 @@ def do_classvar(t, r):
     free_reg(val)
 
 
+# 对应 python 里面 while
 def do_while(t):
     items = t.items
     t = stack_tag()
@@ -712,6 +716,7 @@ def do_while(t):
     pop_tag()
 
 
+# 对应 python 里面 for
 def do_for(tok):
     items = tok.items
 
@@ -734,6 +739,7 @@ def do_for(tok):
     free_tmp(i)
 
 
+# 对应 python 里面 比较 < / != / > ...
 def do_comp(t, r=None):
     name = 'comp:'+get_tag()
     r = do_local(Token(t.pos, 'name', name))
@@ -745,7 +751,7 @@ def do_comp(t, r=None):
     do(Token(t.pos, 'for', None, [t.items[1], t.items[2], ap]))
     return r
 
-
+# 对应 python 里面 if / else 
 def do_if(t):
     items = t.items
     t = get_tag()
@@ -767,7 +773,7 @@ def do_if(t):
     tag(t, n)
     tag(t, 'end')
 
-
+# 对应 python 里面 try 调用
 def do_try(t):
     items = t.items
     t = get_tag()
@@ -779,7 +785,7 @@ def do_try(t):
     free_tmp(do(items[1].items[1]))  # REG
     tag(t, 'end')
 
-
+# 对应 python 里面 return 调用
 def do_return(t):
     if t.items:
         r = do(t.items[0])
@@ -789,7 +795,7 @@ def do_return(t):
     free_tmp(r)
     return
 
-
+# 对应 python 里面 rasie 语法 
 def do_raise(t):
     if t.items:
         r = do(t.items[0])
@@ -799,31 +805,34 @@ def do_raise(t):
     free_tmp(r)
     return
 
-
+# 对应 python 里面 神明语句 
 def do_statements(t):
     for tt in t.items:
         free_tmp(do(tt))
 
-
+# 对应 python 里面  List 语句 
 def do_list(t, r=None):
     r = get_tmp(r)
     manage_seq(LIST, r, t.items)
     return r
 
-
+# 对应 python 里面  dict 字典
 def do_dict(t, r=None):
     r = get_tmp(r)
     manage_seq(DICT, r, t.items)
     return r
 
-
+# 对应 python 里面 class 调用
 def do_get(t, r=None):
     items = t.items
     return infix(GET, items[0], items[1], r)
 
 
+# 对应 python 里面 break 
 def do_break(t): jump(D.tstack[-1], 'break')
+# 对应 python 里面 continue
 def do_continue(t): jump(D.tstack[-1], 'continue')
+# # 对应 python 里面 pass 
 def do_pass(t): code(PASS)
 
 
@@ -856,6 +865,7 @@ rmap = {
 }
 
 
+# # 对应 python 里面 do 
 def do(t, r=None):
     if t.pos:
         setpos(t.pos)
@@ -869,6 +879,11 @@ def do(t, r=None):
         D.error = True
         tokenize.u_error('encode', D.code, t.pos)
 
+
+# encode -> do()（总入口） -> 通过 rmap/ fmap 查找到 语法单元对应处理逻辑
+# rmap -> 基本类型
+# fmap-> 对应方法之类的东西 
+# item -> 子 items -> 自定向下进行扫描
 
 def encode(fname, s, t):
     t = Token((1, 1), 'module', 'module', [t])

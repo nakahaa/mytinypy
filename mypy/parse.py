@@ -471,6 +471,7 @@ def nargs_nud(t):
     return t
 
 
+## 定义了一个 map， map里面定义了一个 token 对应的语法分析程序，比如 while 对应 while_nud。
 base_dmap = {
     ',': {'lbp': 20, 'bp': 20, 'led': infix_tuple},
     '+': {'lbp': 50, 'bp': 50, 'led': infix_led},
@@ -562,6 +563,7 @@ def do_module():
     return items.pop()
 
 
+## 执行顺寻： parse() -> do_module() -> advance() -> do_advane()
 def parse(s, tokens, wrap=0):
     global P
     s = tokenize.clean(s)

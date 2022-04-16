@@ -122,6 +122,7 @@ def indent(v):
             T.add('dedent', v)
 
 
+#处理 变量
 def do_symbol(s, i, l):
     symbols = []
     v, f, i = s[i], i, i+1
@@ -144,7 +145,7 @@ def do_symbol(s, i, l):
         T.braces -= 1
     return i
 
-
+#处理 数字
 def do_number(s, i, l):
     v, i, c = s[i], i+1, s[i]
     while i < l:
@@ -163,6 +164,7 @@ def do_number(s, i, l):
     return i
 
 
+# 处理命令命名
 def do_name(s, i, l):
     v, i = s[i], i+1
     while i < l:
@@ -176,7 +178,7 @@ def do_name(s, i, l):
         T.add('name', v)
     return i
 
-
+# 处理字符串
 def do_string(s, i, l):
     v, q, i = '', s[i], i+1
     if (l-i) >= 5 and s[i] == q and s[i+1] == q:  # """
@@ -215,6 +217,7 @@ def do_string(s, i, l):
     return i
 
 
+#处理代码注释
 def do_comment(s, i, l):
     i += 1
     while i < l:
